@@ -104,7 +104,7 @@ export default function DiscoveryForm({ onSubmit }: DiscoveryFormProps) {
         <button
           type="submit"
           disabled={!accountName.trim()}
-          className="bg-[#00297A] hover:bg-[#003a9e] text-white font-semibold px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full mt-2"
+          className="bg-[var(--color-primary-700)] hover:bg-[var(--color-primary-600)] text-white font-semibold px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full mt-2"
         >
           Load Discovery Questions
         </button>

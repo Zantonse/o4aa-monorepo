@@ -83,16 +83,16 @@ export default function DiscoveryWizard() {
             <button
               key={value}
               onClick={() => handleSelectUseCase(value)}
-              className="text-left bg-white border border-slate-200 rounded-xl p-5 hover:border-[#00297A] hover:shadow-md transition-all group"
+              className="text-left bg-white border border-slate-200 rounded-xl p-5 hover:border-[var(--color-primary-700)] hover:shadow-md transition-all group"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-slate-900 group-hover:text-[#00297A] transition-colors">
+                  <h3 className="font-semibold text-slate-900 group-hover:text-[var(--color-primary-700)] transition-colors">
                     {label}
                   </h3>
                   <p className="text-sm text-slate-500 mt-1">{USE_CASE_DESCRIPTIONS[value]}</p>
                 </div>
-                <ChevronRight size={20} className="text-slate-300 group-hover:text-[#00297A] transition-colors shrink-0 ml-4" />
+                <ChevronRight size={20} className="text-slate-300 group-hover:text-[var(--color-primary-700)] transition-colors shrink-0 ml-4" />
               </div>
             </button>
           ))}
@@ -121,7 +121,7 @@ export default function DiscoveryWizard() {
             <span className="hidden sm:inline">Start over</span>
           </button>
           <span className="text-slate-300">|</span>
-          <span className="text-sm font-medium text-[#00297A]">
+          <span className="text-sm font-medium text-[var(--color-primary-700)]">
             {useCase ? USE_CASE_LABELS[useCase] : ''}
           </span>
         </div>
@@ -137,7 +137,7 @@ export default function DiscoveryWizard() {
             key={idx}
             onClick={() => setCurrentStep(idx + 1)}
             className={`h-1.5 flex-1 rounded-full transition-colors ${
-              idx + 1 <= currentStep ? 'bg-[#00297A]' : 'bg-slate-200'
+              idx + 1 <= currentStep ? 'bg-[var(--color-primary-700)]' : 'bg-slate-200'
             }`}
             title={flowSteps[idx].section}
           />
@@ -221,7 +221,7 @@ export default function DiscoveryWizard() {
         {isLast ? (
           <button
             onClick={handleReset}
-            className="flex items-center gap-2 bg-[#00297A] hover:bg-[#003a9e] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 bg-[var(--color-primary-700)] hover:bg-[var(--color-primary-600)] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm"
           >
             <RotateCcw size={16} />
             New Discovery
@@ -229,7 +229,7 @@ export default function DiscoveryWizard() {
         ) : (
           <button
             onClick={() => setCurrentStep((s) => s + 1)}
-            className="flex items-center gap-2 bg-[#00297A] hover:bg-[#003a9e] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 bg-[var(--color-primary-700)] hover:bg-[var(--color-primary-600)] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm"
           >
             {flowSteps[currentStep].section}
             <ChevronRight size={18} />

@@ -17,7 +17,7 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className="min-h-full flex flex-col">
         {/* Top navbar */}
-        <header className="bg-[#00297A] border-b border-[#001d5a] sticky top-0 z-50">
+        <header className="bg-[var(--color-primary-700)] border-b border-[var(--color-primary-800)] sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
             {/* Logo / wordmark */}
             <div className="flex items-center gap-2">

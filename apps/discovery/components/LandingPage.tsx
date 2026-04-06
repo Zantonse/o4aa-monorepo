@@ -81,7 +81,7 @@ export default function LandingPage() {
       {/* Hero */}
       <section
         className="rounded-2xl overflow-hidden relative px-8 py-14 text-center"
-        style={{ background: 'linear-gradient(180deg, #EEF2FF 0%, #F8FAFC 100%)' }}
+        style={{ background: 'linear-gradient(180deg, var(--color-primary-50) 0%, var(--color-canvas) 100%)' }}
       >
         {/* Background illustration */}
         <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none select-none">
@@ -136,7 +136,7 @@ export default function LandingPage() {
             </select>
             <button
               onClick={handleGo}
-              className="bg-[#00297A] hover:bg-[#003a9e] text-white font-semibold px-6 py-2 rounded-lg transition-colors text-sm shrink-0 w-full sm:w-auto"
+              className="bg-[var(--color-primary-700)] hover:bg-[var(--color-primary-600)] text-white font-semibold px-6 py-2 rounded-lg transition-colors text-sm shrink-0 w-full sm:w-auto"
             >
               Go
             </button>
@@ -188,7 +188,7 @@ export default function LandingPage() {
               href={`/diagrams#${tile.id}`}
               className="group bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-blue-200 hover:shadow-md transition-all"
             >
-              <div className="aspect-video flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a, #1e3a5f)' }}>
+              <div className="aspect-video flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--color-text), #1e3a5f)' }}>
                 <Image
                   src={tile.image}
                   alt={tile.label}

@@ -44,7 +44,7 @@ export default function QuestionBankPage() {
           </select>
           <button
             onClick={loadPlan}
-            className="bg-[#00297A] hover:bg-[#003a9e] text-white font-semibold px-5 py-2 rounded-lg transition-colors text-sm shrink-0"
+            className="bg-[var(--color-primary-700)] hover:bg-[var(--color-primary-600)] text-white font-semibold px-5 py-2 rounded-lg transition-colors text-sm shrink-0"
           >
             Load Questions
           </button>

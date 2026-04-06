@@ -36,7 +36,7 @@ export default function QuestionPlan({ plan }: QuestionPlanProps) {
           onClick={() => setActiveTab('cotm')}
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'cotm'
-              ? 'bg-[#00297A] text-white shadow-sm'
+              ? 'bg-[var(--color-primary-700)] text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
           }`}
         >
@@ -46,7 +46,7 @@ export default function QuestionPlan({ plan }: QuestionPlanProps) {
           onClick={() => setActiveTab('flow')}
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'flow'
-              ? 'bg-[#00297A] text-white shadow-sm'
+              ? 'bg-[var(--color-primary-700)] text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
           }`}
         >

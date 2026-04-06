@@ -12,7 +12,7 @@ export default function FrequencyBar({ frequency, label, size = 'sm', color }: F
   const height = size === 'sm' ? 'h-1.5' : 'h-2';
   const gradient = color
     ? `linear-gradient(90deg, ${color.from}, ${color.to})`
-    : 'linear-gradient(90deg, #00297A, #3B82F6)';
+    : 'linear-gradient(90deg, var(--color-primary-700), #3B82F6)';
 
   return (
     <div className="flex items-center gap-2 min-w-0">
