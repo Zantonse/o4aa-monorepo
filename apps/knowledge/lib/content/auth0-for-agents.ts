@@ -67,6 +67,36 @@ export const content: SectionContent = {
       ],
     },
     {
+      heading: 'Token Vault vs XAA — Who Uses What and Why',
+      paragraphs: [
+        '!! This is the most common confusion in O4AA positioning. Token Vault and XAA solve different problems for different actors. Getting the distinction wrong leads to architectural mistakes that break audit trails.',
+        'Token Vault is for the developer building the agent. Your agent needs to call Slack, Google Drive, or Salesforce on behalf of the user. Token Vault stores the user\'s OAuth tokens for 35+ third-party APIs, handles refresh and revocation, and gives the agent a fresh token at runtime. The developer chooses which integrations to enable. The user consents via OAuth. No IT admin is in the loop.',
+        'XAA (Cross App Access) is for the enterprise IT admin. A third-party ISV ships an AI agent that wants to access your internal APIs on behalf of your employees. XAA puts the IT admin in control: they create a Managed Connection in the Okta console that specifies which agents can access which resources with which scopes. The ISV\'s agent participates in the flow but does not control the policy.',
+      ],
+      conceptGrid: [
+        { label: 'Token Vault', text: 'Direction: agent calls OUT to third-party APIs. Who controls access: the developer building the agent. Trust boundary: within one app\'s scope. Token type: user\'s own OAuth token for the third-party service. The third-party API sees the user — the agent is invisible.' },
+        { label: 'XAA / ID-JAG', text: 'Direction: third-party agent calls IN to your APIs. Who controls access: the enterprise IT admin via Managed Connections. Trust boundary: across organizational boundaries. Token type: ID-JAG → scoped access token carrying both user (sub) and agent (cid) identity.' },
+        { label: 'Both Together', text: 'A single agent workflow often uses both. Read the user\'s Google Calendar → Token Vault (outbound). Write a summary to the company knowledge base → XAA (inbound to enterprise API). Approve before posting to #general → CIBA. Filter retrieved docs → FGA for RAG.' },
+      ],
+      labeledCallouts: [
+        {
+          label: 'The Audit Trail Gap',
+          labelColor: 'amber',
+          text: 'Token Vault hands the agent the user\'s OAuth token. The third-party API (Google, Slack) sees only the user — there is no agent identity in the token. If the agent deletes a user\'s Google Drive file, Google\'s audit log shows the user did it, not the agent. Auth0\'s own logs record that the agent requested the token, but the third-party API has no concept of delegation. XAA fixes this for APIs you control — the token carries both sub (user) and cid (agent) — but cannot fix it for third-party APIs that only understand their own OAuth tokens.',
+        },
+        {
+          label: 'What If the Third Party Supports XAA?',
+          labelColor: 'blue',
+          text: 'If a third-party service implements XAA as a Resource App, you skip Token Vault for that service and use XAA instead. The agent presents an ID-JAG to the third party\'s auth server and receives a token carrying both user and agent identity — full dual attribution. The third-party API can then log exactly which agent did what on behalf of which user. Token Vault exists because most third-party APIs do not support delegated assertion flows today. As more APIs adopt XAA or similar standards (RFC 8693, ID-JAG), Token Vault\'s role shifts from primary auth mechanism to convenience layer for token lifecycle management.',
+        },
+        {
+          label: 'Air Canada Lesson',
+          labelColor: 'rose',
+          text: 'The Air Canada chatbot incident (Moffatt v. Air Canada, 2024) is the canonical example of what happens without dual attribution. The chatbot used a service account to access downstream systems — no user identity in the delegation chain, no agent identity at the resource layer, no audit trail connecting the user\'s request to the chatbot\'s action. Token Vault prevents credential sprawl (no hardcoded API keys) but does not solve attribution at the third-party layer. XAA solves attribution for APIs that participate in the delegation chain.',
+        },
+      ],
+    },
+    {
       heading: 'AI Framework SDKs — What\'s Supported',
       paragraphs: [
         'Auth0 ships framework-native SDKs so developers integrate auth using patterns they already know — not a generic OAuth library bolted on from the side. Available under @auth0/ai-* (npm) and auth0-ai-* (PyPI).',
