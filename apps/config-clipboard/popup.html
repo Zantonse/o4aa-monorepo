@@ -1,12 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Okta Config Clipboard</title>
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <script type="module" src="popup.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=240">
+  <title>O4AA Config</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup">
+    <div class="progress-section">
+      <svg width="56" height="56" viewBox="0 0 56 56">
+        <circle cx="28" cy="28" r="24" fill="none" stroke="oklch(0.92 0.01 260)" stroke-width="4" />
+        <circle id="ring-fill" cx="28" cy="28" r="24" fill="none" stroke="oklch(0.35 0.16 260)" stroke-width="4"
+                stroke-dasharray="150.8" stroke-dashoffset="150.8"
+                stroke-linecap="round" transform="rotate(-90 28 28)" />
+        <text id="ring-text" x="28" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="oklch(0.13 0.02 260)">0/13</text>
+      </svg>
+      <div class="progress-label">
+        <strong>O4AA Config</strong>
+        <span>Clipboard</span>
+      </div>
+    </div>
+
+    <div id="missing-list" class="missing-list"></div>
+
+    <button id="copy-btn" class="btn-primary">Copy JSON</button>
+    <button id="panel-btn" class="btn-link">Open Side Panel</button>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
 </html>
