@@ -42,7 +42,8 @@ export async function GET(_req: NextRequest): Promise<NextResponse> {
     return response;
   } catch (err) {
     const message = getHumanFriendlyError(err);
-    const url = new URL('/flow', process.env.REDIRECT_URI?.replace('/api/auth/callback', '') ?? 'http://localhost:3002');
+    const origin = new URL(_req.url).origin;
+    const url = new URL('/flow', origin);
     url.searchParams.set('error', message);
     return NextResponse.redirect(url.toString(), { status: 302 });
   }

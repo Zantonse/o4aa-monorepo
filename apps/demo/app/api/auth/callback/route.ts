@@ -18,12 +18,12 @@ export const dynamic = 'force-dynamic';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-function baseUrl(redirectUri: string): string {
+function baseUrl(redirectUri: string, fallbackOrigin: string): string {
   try {
     const u = new URL(redirectUri);
     return `${u.protocol}//${u.host}`;
   } catch {
-    return 'http://localhost:3002';
+    return fallbackOrigin;
   }
 }
 
@@ -68,7 +68,8 @@ async function postForm(
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const config  = getConfig();
-  const origin  = baseUrl(config.redirectUri);
+  const requestOrigin = new URL(req.url).origin;
+  const origin  = baseUrl(config.redirectUri, requestOrigin);
   const flowUrl = `${origin}/flow`;
 
   const steps: FlowStep[] = [];
