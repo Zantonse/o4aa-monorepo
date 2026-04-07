@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { FlowStep } from '@/lib/session';
 
 interface Props {
@@ -7,31 +8,23 @@ interface Props {
   succeeded: boolean;
 }
 
-const STEP_DEFS = [
-  {
-    number:  1,
-    label:   'Step 1',
-    title:   'Auth Code\n→ ID Token',
-    fromLabel: 'User',
-    toLabel:   'Okta /token',
-  },
-  {
-    number:  2,
-    label:   'Step 2',
-    title:   'ID Token\n→ JAG Token',
-    fromLabel: 'Agent',
-    toLabel:   'JAG Issuer',
-  },
-  {
-    number:  3,
-    label:   'Step 3',
-    title:   'JAG Token\n→ Access Token',
-    fromLabel: 'Agent',
-    toLabel:   'Resource Server',
-  },
+/**
+ * Hotspots positioned over the flow.png sequence diagram.
+ * Each maps to a numbered circle on the diagram and scrolls to the
+ * corresponding StepTimeline entry on click.
+ */
+const HOTSPOTS = [
+  { id: 1, label: '1. SSO Login',               left: '9.5%',  top: '20%',  step: 1 },
+  { id: 2, label: '2. ID Token returned',        left: '52%',   top: '29%',  step: 1 },
+  { id: 3, label: '3. Exchange for JAG',          left: '30.5%', top: '46%',  step: 2 },
+  { id: 4, label: '4. JAG Assertion returned',    left: '52%',   top: '56.5%', step: 2 },
+  { id: 5, label: '5. Present JAG for AT',        left: '30.5%', top: '64%',  step: 3 },
+  { id: 6, label: '6. Scoped Access Token',       left: '64%',   top: '71%',  step: 3 },
 ] as const;
 
-function getStatus(stepNumber: number, steps: FlowStep[], succeeded: boolean) {
+type Status = 'pending' | 'success' | 'error';
+
+function getStepStatus(stepNumber: number, steps: FlowStep[], succeeded: boolean): Status {
   const s = steps[stepNumber - 1];
   if (!s) return 'pending';
   if (s.error) return 'error';
@@ -39,27 +32,21 @@ function getStatus(stepNumber: number, steps: FlowStep[], succeeded: boolean) {
   return 'success';
 }
 
-type Status = 'pending' | 'success' | 'error';
+function statusColor(status: Status): string {
+  if (status === 'success') return 'var(--color-success-text)';
+  if (status === 'error')   return 'oklch(0.55 0.18 25)';
+  return 'var(--color-text-muted)';
+}
 
-function statusColors(status: Status) {
-  if (status === 'success') return {
-    ring:   'var(--color-success-border)',
-    bg:     'var(--color-success-bg)',
-    text:   'var(--color-success-text)',
-    label:  '#16a34a',
-  };
-  if (status === 'error') return {
-    ring:   'oklch(0.88 0.08 25)',
-    bg:     'oklch(0.97 0.02 25)',
-    text:   'oklch(0.40 0.15 25)',
-    label:  'oklch(0.40 0.15 25)',
-  };
-  return {
-    ring:   'var(--color-border)',
-    bg:     'var(--color-surface-alt)',
-    text:   'var(--color-text-muted)',
-    label:  'var(--color-text-muted)',
-  };
+function statusBg(status: Status): string {
+  if (status === 'success') return 'var(--color-success-bg)';
+  if (status === 'error')   return 'oklch(0.97 0.02 25)';
+  return 'var(--color-surface-alt)';
+}
+
+function scrollToStep(stepNumber: number) {
+  const el = document.getElementById(`step-${stepNumber}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function StatusIcon({ status }: { status: Status }) {
@@ -106,118 +93,62 @@ export default function FlowDiagram({ steps, succeeded }: Props) {
         Token Exchange Flow
       </div>
 
-      {/* Three step boxes with connector arrows */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr auto 1fr',
-          alignItems: 'center',
-          gap: '0',
-          overflowX: 'auto',
-        }}
-      >
-        {STEP_DEFS.map((def, idx) => {
-          const status = getStatus(def.number, steps, succeeded);
-          const colors = statusColors(status);
-          const step   = steps[idx];
+      {/* Flow diagram image with clickable hotspots */}
+      <div style={{ position: 'relative', width: '100%' }}>
+        <Image
+          src="/flow.png"
+          alt="ID-JAG Token Exchange Flow — RFC 8693 + RFC 7523"
+          width={1184}
+          height={847}
+          style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 'var(--radius-sm)' }}
+          priority
+        />
+
+        {/* Clickable hotspot circles */}
+        {HOTSPOTS.map(hotspot => {
+          const status = getStepStatus(hotspot.step, steps, succeeded);
+          const bg     = statusColor(status);
+          const bgFill = statusBg(status);
 
           return (
-            <>
-              {/* Step box */}
-              <div
-                key={`step-${def.number}`}
-                style={{
-                  border:       `2px solid ${colors.ring}`,
-                  background:   colors.bg,
-                  borderRadius: 'var(--radius-md)',
-                  padding:      '0.875rem 1rem',
-                  minWidth:     '140px',
-                  textAlign:    'center',
-                  position:     'relative',
-                }}
-              >
-                {/* Status icon (top-right) */}
-                <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem' }}>
-                  <StatusIcon status={status} />
-                </div>
-
-                {/* Step number badge */}
-                <div
-                  style={{
-                    display:         'inline-flex',
-                    alignItems:      'center',
-                    justifyContent:  'center',
-                    width:           '1.5rem',
-                    height:          '1.5rem',
-                    borderRadius:    '9999px',
-                    background:      colors.text,
-                    color:           colors.bg,
-                    fontSize:        '0.6875rem',
-                    fontWeight:      700,
-                    marginBottom:    '0.5rem',
-                  }}
-                >
-                  {def.number}
-                </div>
-
-                {/* Title (multi-line) */}
-                <div
-                  style={{
-                    fontSize:    '0.8125rem',
-                    fontWeight:  600,
-                    color:       colors.text,
-                    lineHeight:  1.3,
-                    whiteSpace:  'pre-line',
-                    marginBottom: '0.375rem',
-                  }}
-                >
-                  {def.title}
-                </div>
-
-                {/* Duration */}
-                {step?.durationMs != null && (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                    {step.durationMs}ms
-                  </div>
-                )}
-
-                {/* Endpoint label */}
-                <div
-                  style={{
-                    fontSize:     '0.6875rem',
-                    color:        'var(--color-text-muted)',
-                    marginTop:    '0.5rem',
-                    fontFamily:   'var(--font-mono)',
-                    overflow:     'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace:   'nowrap',
-                    maxWidth:     '100%',
-                  }}
-                  title={step?.endpoint}
-                >
-                  {def.fromLabel} → {def.toLabel}
-                </div>
-              </div>
-
-              {/* Arrow connector (not after last) */}
-              {idx < STEP_DEFS.length - 1 && (
-                <div
-                  key={`arrow-${def.number}`}
-                  style={{
-                    display:        'flex',
-                    alignItems:     'center',
-                    justifyContent: 'center',
-                    padding:        '0 0.5rem',
-                    color:          'var(--color-text-muted)',
-                  }}
-                  aria-hidden="true"
-                >
-                  <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
-                    <path d="M0 8h28M22 3l7 5-7 5" stroke="var(--color-border)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              )}
-            </>
+            <button
+              key={hotspot.id}
+              onClick={() => scrollToStep(hotspot.step)}
+              title={`${hotspot.label} — click to see Step ${hotspot.step} details`}
+              aria-label={hotspot.label}
+              style={{
+                position:       'absolute',
+                left:           hotspot.left,
+                top:            hotspot.top,
+                transform:      'translate(-50%, -50%)',
+                width:          '1.75rem',
+                height:         '1.75rem',
+                borderRadius:   '9999px',
+                border:         `2.5px solid ${bg}`,
+                background:     bgFill,
+                cursor:         'pointer',
+                display:        'flex',
+                alignItems:     'center',
+                justifyContent: 'center',
+                fontSize:       '0.6875rem',
+                fontWeight:     700,
+                color:          bg,
+                padding:        0,
+                transition:     'transform 150ms, box-shadow 150ms',
+                boxShadow:      '0 1px 4px rgba(0,0,0,0.12)',
+                zIndex:         2,
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translate(-50%, -50%) scale(1.25)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translate(-50%, -50%) scale(1)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.12)';
+              }}
+            >
+              {hotspot.step}
+            </button>
           );
         })}
       </div>

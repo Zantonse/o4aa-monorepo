@@ -79,8 +79,8 @@ export default async function FlowPage({ searchParams }: PageProps) {
         <FlowDiagram steps={steps} succeeded={succeeded} />
       </div>
 
-      {/* Two-column: timeline + tokens */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 0.9fr)', gap: '1.5rem', alignItems: 'start' }}>
+      {/* Two-column: timeline + tokens (stacks on mobile) */}
+      <div className="flow-grid">
         {/* Left: Step Timeline */}
         <div>
           <StepTimeline steps={steps} />
@@ -91,8 +91,14 @@ export default async function FlowPage({ searchParams }: PageProps) {
           {session?.idToken && (
             <TokenCard label="ID Token" token={session.idToken} stepNumber={1} />
           )}
+          {session?.jagClientAssertion && (
+            <TokenCard label="Step 2 Client Assertion" token={session.jagClientAssertion} stepNumber={2} />
+          )}
           {session?.jagToken && (
             <TokenCard label="JAG Token" token={session.jagToken} stepNumber={2} />
+          )}
+          {session?.resourceClientAssertion && (
+            <TokenCard label="Step 3 Client Assertion" token={session.resourceClientAssertion} stepNumber={3} />
           )}
           {session?.accessToken && (
             <TokenCard label="Access Token" token={session.accessToken} stepNumber={3} />

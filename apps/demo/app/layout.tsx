@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import Link from 'next/link';
 import './globals.css';
 
@@ -13,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className={`h-full ${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="min-h-full flex flex-col">
         {/* Top navbar */}
         <header style={{ background: 'var(--color-primary-700)', borderBottom: '1px solid var(--color-primary-800)' }} className="sticky top-0 z-50">

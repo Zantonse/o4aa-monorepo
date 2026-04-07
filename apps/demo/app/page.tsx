@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { hasConfig } from '@/lib/config';
 
 export default async function HomePage() {
@@ -108,6 +109,17 @@ export default async function HomePage() {
           Flow Overview
         </h2>
 
+        {/* Flow diagram image */}
+        <div style={{ marginBottom: '1.5rem', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+          <Image
+            src="/flow.png"
+            alt="ID-JAG Token Exchange Flow diagram"
+            width={1184}
+            height={847}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
           {[
             {
@@ -125,7 +137,7 @@ export default async function HomePage() {
             {
               step: '3',
               label: 'JAG Token \u2192 Access Token',
-              detail: 'Scoped access token for the resource server',
+              detail: 'JWT bearer grant — scoped access token for the resource server',
               color: 'var(--color-primary-500)',
             },
           ].map((item, idx, arr) => (
@@ -169,7 +181,7 @@ export default async function HomePage() {
       </div>
 
       {/* Two-column info cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div className="info-grid">
         <div className="card" style={{ padding: '1.5rem' }}>
           <h3 style={{
             fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)',
@@ -177,8 +189,9 @@ export default async function HomePage() {
           }}>
             Grant Type
           </h3>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: 'var(--color-primary-600)', wordBreak: 'break-all' }}>
-            urn:ietf:params:oauth:<br />grant-type:token-exchange
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: 'var(--color-primary-600)', wordBreak: 'break-all', lineHeight: 1.6 }}>
+            Step 2: token-exchange<br />
+            Step 3: jwt-bearer
           </p>
         </div>
         <div className="card" style={{ padding: '1.5rem' }}>

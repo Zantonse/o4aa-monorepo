@@ -27,12 +27,21 @@ function baseUrl(redirectUri: string, fallbackOrigin: string): string {
   }
 }
 
+interface PostFormResult {
+  data: Record<string, unknown>;
+  durationMs: number;
+  rawRequest: string;
+  rawResponse: string;
+  statusCode: number;
+}
+
 async function postForm(
   endpoint: string,
   params: Record<string, string>,
-): Promise<{ data: Record<string, unknown>; durationMs: number }> {
+): Promise<PostFormResult> {
   const start = Date.now();
   const body  = new URLSearchParams(params);
+  const url   = new URL(endpoint);
 
   const res = await fetch(endpoint, {
     method:  'POST',
@@ -40,8 +49,50 @@ async function postForm(
     body:    body.toString(),
   });
 
-  const durationMs = Date.now() - start;
-  const text       = await res.text();
+  const durationMs  = Date.now() - start;
+  const statusCode  = res.status;
+  const text        = await res.text();
+
+  // Build raw HTTP request representation (secrets redacted)
+  const redactKeys = ['client_secret', 'client_assertion', 'subject_token', 'code_verifier', 'assertion'];
+  const safeBody = new URLSearchParams(
+    Object.fromEntries(
+      Object.entries(params).map(([k, v]) =>
+        redactKeys.includes(k) ? [k, '[REDACTED]'] : [k, v],
+      ),
+    ),
+  ).toString();
+  const rawRequest = [
+    `POST ${url.pathname} HTTP/1.1`,
+    `Host: ${url.host}`,
+    `Content-Type: application/x-www-form-urlencoded`,
+    ``,
+    safeBody,
+  ].join('\n');
+
+  // Build raw HTTP response representation (tokens redacted)
+  let responseBody = text;
+  try {
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    const safeObj: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      if (typeof v === 'string' && v.split('.').length === 3) {
+        safeObj[k] = '[TOKEN]';
+      } else {
+        safeObj[k] = v;
+      }
+    }
+    responseBody = JSON.stringify(safeObj, null, 2);
+  } catch {
+    // not JSON — use raw text
+  }
+  const statusText = res.statusText || (res.ok ? 'OK' : 'Error');
+  const rawResponse = [
+    `HTTP/1.1 ${statusCode} ${statusText}`,
+    `Content-Type: application/json`,
+    ``,
+    responseBody,
+  ].join('\n');
 
   let data: Record<string, unknown>;
   try {
@@ -55,13 +106,16 @@ async function postForm(
       (data as { error_description?: string }).error_description ??
       (data as { error?: string }).error ??
       `HTTP ${res.status}`,
-    ) as Error & { oauthError?: string; oauthDescription?: string };
+    ) as Error & { oauthError?: string; oauthDescription?: string; rawRequest?: string; rawResponse?: string; statusCode?: number };
     err.oauthError       = (data as { error?: string }).error;
     err.oauthDescription = (data as { error_description?: string }).error_description;
+    err.rawRequest       = rawRequest;
+    err.rawResponse      = rawResponse;
+    err.statusCode       = statusCode;
     throw err;
   }
 
-  return { data, durationMs };
+  return { data, durationMs, rawRequest, rawResponse, statusCode };
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
@@ -120,7 +174,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   try {
     const step1Endpoint = `${config.oktaIssuer}/v1/token`;
-    const { data, durationMs } = await postForm(step1Endpoint, step1Params);
+    const { data, durationMs, rawRequest, rawResponse, statusCode } = await postForm(step1Endpoint, step1Params);
 
     idToken = data.id_token as string;
     if (!idToken) throw new Error('No id_token in response');
@@ -131,13 +185,20 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       params:     sanitiseParams(step1Params),
       response:   sanitiseResponse(data),
       durationMs,
+      rawRequest,
+      rawResponse,
+      statusCode,
     });
   } catch (err) {
+    const e = err as Error & { rawRequest?: string; rawResponse?: string; statusCode?: number };
     steps.push({
-      label:    'Step 1 — Auth code → ID token',
-      endpoint: `${config.oktaIssuer}/v1/token`,
-      params:   sanitiseParams(step1Params),
-      error:    getHumanFriendlyError(err),
+      label:       'Step 1 — Auth code → ID token',
+      endpoint:    `${config.oktaIssuer}/v1/token`,
+      params:      sanitiseParams(step1Params),
+      error:       getHumanFriendlyError(err),
+      rawRequest:  e.rawRequest,
+      rawResponse: e.rawResponse,
+      statusCode:  e.statusCode,
     });
     return redirectWithSession(flowUrl, { steps, error: getHumanFriendlyError(err) }, config.sessionSecret);
   }
@@ -146,6 +207,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // STEP 2 — Token exchange: ID token → JAG token
   // ════════════════════════════════════════════════════════════════
   let jagToken: string;
+  let jagClientAssertionJwt: string | undefined;
 
   try {
     const agentPrivateKeyJwk = JSON.parse(config.agentPrivateKeyJwk) as crypto.JsonWebKey;
@@ -155,19 +217,21 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       privateKeyJwk: agentPrivateKeyJwk,
       keyId:         config.agentKeyId,
     });
+    jagClientAssertionJwt = jagClientAssertion;
 
     const step2Endpoint = `${config.jagIssuer}/v1/token`;
     const step2Params: Record<string, string> = {
       grant_type:            'urn:ietf:params:oauth:grant-type:token-exchange',
       subject_token:         idToken,
       subject_token_type:    'urn:ietf:params:oauth:token-type:id_token',
+      requested_token_type:  'urn:ietf:params:oauth:token-type:id-jag',
       audience:              config.jagTargetAudience,
       scope:                 config.jagScope,
       client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
       client_assertion:      jagClientAssertion,
     };
 
-    const { data, durationMs } = await postForm(step2Endpoint, step2Params);
+    const { data, durationMs, rawRequest, rawResponse, statusCode } = await postForm(step2Endpoint, step2Params);
 
     jagToken = (data.access_token ?? data.issued_token) as string;
     if (!jagToken) throw new Error('No token in JAG exchange response');
@@ -178,13 +242,20 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       params:     sanitiseParams(step2Params),
       response:   sanitiseResponse(data),
       durationMs,
+      rawRequest,
+      rawResponse,
+      statusCode,
     });
   } catch (err) {
+    const e = err as Error & { rawRequest?: string; rawResponse?: string; statusCode?: number };
     steps.push({
-      label:    'Step 2 — ID token → JAG token',
-      endpoint: `${config.jagIssuer}/v1/token`,
-      params:   {},
-      error:    getHumanFriendlyError(err),
+      label:       'Step 2 — ID token → JAG token',
+      endpoint:    `${config.jagIssuer}/v1/token`,
+      params:      {},
+      error:       getHumanFriendlyError(err),
+      rawRequest:  e.rawRequest,
+      rawResponse: e.rawResponse,
+      statusCode:  e.statusCode,
     });
     return redirectWithSession(
       flowUrl,
@@ -197,6 +268,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // STEP 3 — Token exchange: JAG token → access token
   // ════════════════════════════════════════════════════════════════
   let accessToken: string;
+  let resourceClientAssertionJwt: string | undefined;
 
   try {
     const agentPrivateKeyJwk = JSON.parse(config.agentPrivateKeyJwk) as crypto.JsonWebKey;
@@ -206,16 +278,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       privateKeyJwk: agentPrivateKeyJwk,
       keyId:         config.agentKeyId,
     });
+    resourceClientAssertionJwt = resourceClientAssertion;
 
     const step3Params: Record<string, string> = {
-      grant_type:            'urn:ietf:params:oauth:grant-type:token-exchange',
-      subject_token:         jagToken,
-      subject_token_type:    'urn:ietf:params:oauth:token-type:jwt',
+      grant_type:            'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion:             jagToken,
       client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
       client_assertion:      resourceClientAssertion,
     };
 
-    const { data, durationMs } = await postForm(config.resourceTokenEndpoint, step3Params);
+    const { data, durationMs, rawRequest, rawResponse, statusCode } = await postForm(config.resourceTokenEndpoint, step3Params);
 
     accessToken = data.access_token as string;
     if (!accessToken) throw new Error('No access_token in resource server response');
@@ -226,13 +298,20 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       params:     sanitiseParams(step3Params),
       response:   sanitiseResponse(data),
       durationMs,
+      rawRequest,
+      rawResponse,
+      statusCode,
     });
   } catch (err) {
+    const e = err as Error & { rawRequest?: string; rawResponse?: string; statusCode?: number };
     steps.push({
-      label:    'Step 3 — JAG token → access token',
-      endpoint: config.resourceTokenEndpoint,
-      params:   {},
-      error:    getHumanFriendlyError(err),
+      label:       'Step 3 — JAG token → access token',
+      endpoint:    config.resourceTokenEndpoint,
+      params:      {},
+      error:       getHumanFriendlyError(err),
+      rawRequest:  e.rawRequest,
+      rawResponse: e.rawResponse,
+      statusCode:  e.statusCode,
     });
     return redirectWithSession(
       flowUrl,
@@ -246,6 +325,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     idToken,
     jagToken,
     accessToken,
+    jagClientAssertion:      jagClientAssertionJwt,
+    resourceClientAssertion: resourceClientAssertionJwt,
     steps,
     completedAt: new Date().toISOString(),
   };
@@ -272,7 +353,7 @@ function redirectWithSession(url: string, session: Partial<FlowSession>, _secret
 
 /** Remove sensitive values before storing them in the session. */
 function sanitiseParams(params: Record<string, string>): Record<string, string> {
-  const redacted = ['client_secret', 'client_assertion', 'subject_token', 'code_verifier'];
+  const redacted = ['client_secret', 'client_assertion', 'subject_token', 'code_verifier', 'assertion'];
   return Object.fromEntries(
     Object.entries(params).map(([k, v]) =>
       redacted.includes(k) ? [k, '[REDACTED]'] : [k, v],

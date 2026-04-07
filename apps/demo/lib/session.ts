@@ -81,19 +81,24 @@ export interface PKCESession {
 }
 
 export interface FlowStep {
-  label:     string;
-  endpoint:  string;
-  params:    Record<string, string>;
-  response?: Record<string, unknown>;
-  error?:    string;
-  durationMs?: number;
+  label:        string;
+  endpoint:     string;
+  params:       Record<string, string>;
+  response?:    Record<string, unknown>;
+  error?:       string;
+  durationMs?:  number;
+  rawRequest?:  string;
+  rawResponse?: string;
+  statusCode?:  number;
 }
 
 export interface FlowSession {
-  idToken?:     string;
-  jagToken?:    string;
-  accessToken?: string;
-  steps:        FlowStep[];
-  completedAt?: string;
-  error?:       string;
+  idToken?:                string;
+  jagToken?:               string;
+  accessToken?:            string;
+  jagClientAssertion?:     string;
+  resourceClientAssertion?: string;
+  steps:                   FlowStep[];
+  completedAt?:            string;
+  error?:                  string;
 }

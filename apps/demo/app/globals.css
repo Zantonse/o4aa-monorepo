@@ -2,8 +2,31 @@
 @import "@o4aa/ui/tokens";
 
 @theme {
-  /* Demo overrides — system fonts instead of Geist */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Typography — Geist loaded via next/font, variables applied on <html> */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), 'JetBrains Mono', monospace;
+
+  /* Duotone shadow system — tinted (navy hue 260) + true dark */
+  --shadow-subtle:
+    0 1px 2px oklch(0.30 0.02 260 / 0.08),
+    0 1px 3px oklch(0 0 0 / 0.05);
+  --shadow-card:
+    0 2px 8px -2px oklch(0.30 0.02 260 / 0.12),
+    0 4px 12px -4px oklch(0 0 0 / 0.08);
+  --shadow-card-hover:
+    0 8px 24px -4px oklch(0.30 0.02 260 / 0.16),
+    0 12px 32px -8px oklch(0 0 0 / 0.10);
+  --shadow-elevated:
+    0 16px 48px -8px oklch(0.30 0.02 260 / 0.18),
+    0 24px 64px -16px oklch(0 0 0 / 0.12);
+
+  /* Easing tiers */
+  --ease-micro: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-standard: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-content: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Focus ring */
+  --color-focus: oklch(0.55 0.20 260);
 }
 
 @layer base {
@@ -16,21 +39,41 @@
     color: var(--color-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   code, pre {
     font-family: var(--font-mono);
   }
+
+  /* Brand selection color */
+  ::selection {
+    background: oklch(0.88 0.06 260);
+    color: oklch(0.22 0.10 260);
+  }
+
+  /* Reduced motion guard */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
 @layer components {
+  /* ─── Cards ──────────────────────────────────────────── */
   .card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-subtle);
+    box-shadow: var(--shadow-card);
+    transition:
+      box-shadow 250ms var(--ease-standard),
+      border-color 250ms var(--ease-standard);
   }
 
+  /* ─── Primary button ─────────────────────────────────── */
   .btn-primary {
     background: var(--color-primary-600);
     color: white;
@@ -42,13 +85,37 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    transition: background var(--duration-fast) var(--ease-out-expo);
+    border: none;
+    cursor: pointer;
+    transition:
+      background 150ms var(--ease-micro),
+      box-shadow 150ms var(--ease-micro),
+      transform 150ms var(--ease-micro);
   }
 
   .btn-primary:hover {
     background: var(--color-primary-700);
+    box-shadow: 0 2px 8px oklch(0.30 0.10 260 / 0.3);
   }
 
+  .btn-primary:active {
+    background: var(--color-primary-800);
+    transform: scale(0.98);
+  }
+
+  .btn-primary:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ─── Step badges ────────────────────────────────────── */
   .step-badge {
     display: inline-flex;
     align-items: center;
@@ -79,6 +146,7 @@
     border: 1px solid var(--color-border);
   }
 
+  /* ─── Code blocks ────────────────────────────────────── */
   .code-block {
     background: oklch(0.13 0.02 260);
     color: oklch(0.90 0.02 260);
@@ -88,5 +156,71 @@
     font-size: 0.8125rem;
     line-height: 1.6;
     overflow-x: auto;
+    border: 1px solid oklch(0.20 0.02 260);
+  }
+
+  /* ─── Form inputs ────────────────────────────────────── */
+  input[type="text"],
+  input[type="password"],
+  textarea {
+    transition:
+      border-color 150ms var(--ease-micro),
+      box-shadow 150ms var(--ease-micro);
+  }
+
+  input[type="text"]:hover,
+  input[type="password"]:hover,
+  textarea:hover {
+    border-color: var(--color-primary-300);
+  }
+
+  input[type="text"]:focus,
+  input[type="password"]:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px oklch(0.55 0.20 260 / 0.15);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.6;
+  }
+
+  /* ─── Flow page responsive grid ───────────────────────── */
+  .flow-grid {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 768px) {
+    .flow-grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    }
+  }
+
+  /* ─── Landing page info cards responsive ─────────────── */
+  .info-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .info-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* ─── Nav link hover ─────────────────────────────────── */
+  header a {
+    transition: color 150ms var(--ease-micro);
+  }
+
+  header a:hover {
+    color: white !important;
   }
 }

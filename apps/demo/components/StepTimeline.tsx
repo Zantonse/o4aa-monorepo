@@ -8,7 +8,8 @@ interface Props {
 }
 
 function StepItem({ step, index }: { step: FlowStep; index: number }) {
-  const [expanded, setExpanded] = useState(false);
+  const [showRequest, setShowRequest]   = useState(false);
+  const [showResponse, setShowResponse] = useState(false);
   const isError = !!step.error;
 
   const dotColor    = isError ? 'oklch(0.55 0.18 25)'      : 'var(--color-success-text)';
@@ -16,10 +17,13 @@ function StepItem({ step, index }: { step: FlowStep; index: number }) {
   const borderColor = isError ? 'oklch(0.88 0.08 25)'      : 'var(--color-success-border)';
   const bgColor     = isError ? 'oklch(0.97 0.02 25)'      : 'var(--color-success-bg)';
 
-  const statusLabel = isError ? 'Failed' : 'Success';
+  const statusLabel = isError ? 'Failed' : `${step.statusCode ?? 200}`;
 
   return (
-    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+    <div
+      id={`step-${index + 1}`}
+      style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}
+    >
       {/* Timeline dot + line */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '1.75rem', flexShrink: 0, paddingTop: '3px' }}>
         <div
@@ -105,97 +109,97 @@ function StepItem({ step, index }: { step: FlowStep; index: number }) {
           </div>
         )}
 
-        {/* Expand / collapse details */}
-        <button
-          onClick={() => setExpanded(v => !v)}
-          style={{
-            background:   'transparent',
-            border:       'none',
-            cursor:       'pointer',
-            color:        'var(--color-primary-500)',
-            fontSize:     '0.8125rem',
-            padding:      '0',
-            fontFamily:   'var(--font-sans)',
-            display:      'flex',
-            alignItems:   'center',
-            gap:          '0.25rem',
-          }}
-          aria-expanded={expanded}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            fill="none"
-            aria-hidden="true"
-            style={{ transition: 'transform 150ms', transform: expanded ? 'rotate(90deg)' : 'none' }}
-          >
-            <path d="M3 2l5 4-5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {expanded ? 'Hide' : 'Show'} request params
-        </button>
+        {/* Toggle buttons for HTTP request and response */}
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <ToggleButton
+            label="HTTP Request"
+            expanded={showRequest}
+            onClick={() => setShowRequest(v => !v)}
+          />
+          {(step.rawResponse || step.response) && (
+            <ToggleButton
+              label="HTTP Response"
+              expanded={showResponse}
+              onClick={() => setShowResponse(v => !v)}
+            />
+          )}
+        </div>
 
-        {/* Expanded details */}
-        {expanded && (
-          <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {/* Request params */}
-            {Object.keys(step.params).length > 0 && (
-              <div>
-                <div
-                  style={{
-                    fontSize:       '0.75rem',
-                    fontWeight:     600,
-                    textTransform:  'uppercase',
-                    letterSpacing:  '0.06em',
-                    color:          'var(--color-text-muted)',
-                    marginBottom:   '0.375rem',
-                  }}
-                >
-                  Request
-                </div>
-                <div className="code-block">
-                  {Object.entries(step.params).map(([k, v]) => (
-                    <div key={k}>
-                      <span style={{ color: 'oklch(0.78 0.16 85)' }}>{k}</span>
-                      <span style={{ color: 'oklch(0.70 0.04 260)' }}>=</span>
-                      <span style={{ color: 'oklch(0.85 0.05 160)' }}>{v}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* Raw HTTP Request */}
+        {showRequest && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <div style={sectionHeaderStyle}>Request</div>
+            <pre className="code-block" style={{ fontSize: '0.75rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+              {step.rawRequest ?? formatParamsAsHttp(step.endpoint, step.params)}
+            </pre>
+          </div>
+        )}
 
-            {/* Response metadata */}
-            {step.response && Object.keys(step.response).length > 0 && (
-              <div>
-                <div
-                  style={{
-                    fontSize:       '0.75rem',
-                    fontWeight:     600,
-                    textTransform:  'uppercase',
-                    letterSpacing:  '0.06em',
-                    color:          'var(--color-text-muted)',
-                    marginBottom:   '0.375rem',
-                  }}
-                >
-                  Response (metadata only)
-                </div>
-                <div className="code-block">
-                  {Object.entries(step.response).map(([k, v]) => (
-                    <div key={k}>
-                      <span style={{ color: 'oklch(0.78 0.16 85)' }}>{k}</span>
-                      <span style={{ color: 'oklch(0.70 0.04 260)' }}>: </span>
-                      <span style={{ color: 'oklch(0.85 0.05 160)' }}>{JSON.stringify(v)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* Raw HTTP Response */}
+        {showResponse && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <div style={sectionHeaderStyle}>Response</div>
+            <pre className="code-block" style={{ fontSize: '0.75rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+              {step.rawResponse ?? (step.response ? JSON.stringify(step.response, null, 2) : 'No response data')}
+            </pre>
           </div>
         )}
       </div>
     </div>
   );
+}
+
+const sectionHeaderStyle: React.CSSProperties = {
+  fontSize:       '0.75rem',
+  fontWeight:     600,
+  textTransform:  'uppercase',
+  letterSpacing:  '0.06em',
+  color:          'var(--color-text-muted)',
+  marginBottom:   '0.375rem',
+};
+
+function ToggleButton({ label, expanded, onClick }: { label: string; expanded: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background:   'transparent',
+        border:       'none',
+        cursor:       'pointer',
+        color:        'var(--color-primary-500)',
+        fontSize:     '0.8125rem',
+        padding:      '0',
+        fontFamily:   'var(--font-sans)',
+        display:      'flex',
+        alignItems:   'center',
+        gap:          '0.25rem',
+      }}
+      aria-expanded={expanded}
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 12 12"
+        fill="none"
+        aria-hidden="true"
+        style={{ transition: 'transform 150ms', transform: expanded ? 'rotate(90deg)' : 'none' }}
+      >
+        <path d="M3 2l5 4-5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {expanded ? 'Hide' : 'Show'} {label}
+    </button>
+  );
+}
+
+/** Fallback for steps that don't have rawRequest stored (e.g., from older sessions). */
+function formatParamsAsHttp(endpoint: string, params: Record<string, string>): string {
+  try {
+    const url = new URL(endpoint);
+    const body = new URLSearchParams(params).toString();
+    return `POST ${url.pathname} HTTP/1.1\nHost: ${url.host}\nContent-Type: application/x-www-form-urlencoded\n\n${body}`;
+  } catch {
+    return Object.entries(params).map(([k, v]) => `${k}=${v}`).join('\n');
+  }
 }
 
 export default function StepTimeline({ steps }: Props) {
