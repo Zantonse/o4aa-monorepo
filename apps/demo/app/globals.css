@@ -215,6 +215,31 @@
     }
   }
 
+  /* ─── Settings page side-by-side ──────────────────────── */
+  .settings-grid {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 1024px) {
+    .settings-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .settings-form-sticky {
+    position: static;
+  }
+
+  @media (min-width: 1024px) {
+    .settings-form-sticky {
+      position: sticky;
+      top: calc(3.5rem + 1.5rem); /* header height + padding */
+    }
+  }
+
   /* ─── Nav link hover ─────────────────────────────────── */
   header a {
     transition: color 150ms var(--ease-micro);

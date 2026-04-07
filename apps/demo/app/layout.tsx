@@ -19,7 +19,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {/* Top navbar */}
         <header style={{ background: 'var(--color-primary-700)', borderBottom: '1px solid var(--color-primary-800)' }} className="sticky top-0 z-50">
-          <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <span style={{ color: 'white', fontWeight: 700, fontSize: '1.0625rem', lineHeight: 1 }}>
                 Okta
@@ -52,13 +52,13 @@ export default function RootLayout({
 
         {/* Main content */}
         <main className="flex-1">
-          <div className="max-w-5xl mx-auto px-6 py-10">
+          <div className="max-w-6xl mx-auto px-6 py-10">
             {children}
           </div>
         </main>
 
         <footer style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-surface)' }} className="py-6">
-          <div className="max-w-5xl mx-auto px-6 text-center" style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>
+          <div className="max-w-6xl mx-auto px-6 text-center" style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>
             O4AA Demo — JWT Authorization Grant (JAG) Token Exchange Flow
           </div>
         </footer>
