@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { hasConfig } from '@/lib/config';
 import ConfigForm from '@/components/ConfigForm';
+import SetupGuide from '@/components/SetupGuide';
 
 export default async function SettingsPage() {
   const configured = await hasConfig();
@@ -27,12 +28,44 @@ export default async function SettingsPage() {
         </Link>
       </div>
 
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <ConfigForm hasExisting={configured} />
+      {/* Setup instructions */}
+      <div style={{ marginBottom: '2rem' }}>
+        <h2
+          style={{
+            fontSize: '0.8125rem',
+            fontWeight: 600,
+            color: 'var(--color-text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            marginBottom: '0.875rem',
+          }}
+        >
+          Setup Guide
+        </h2>
+        <SetupGuide />
+      </div>
+
+      {/* Config form */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2
+          style={{
+            fontSize: '0.8125rem',
+            fontWeight: 600,
+            color: 'var(--color-text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            marginBottom: '0.875rem',
+          }}
+        >
+          Configuration
+        </h2>
+        <div className="card" style={{ padding: '1.5rem' }}>
+          <ConfigForm hasExisting={configured} />
+        </div>
       </div>
 
       <div style={{
-        marginTop: '1.5rem', background: 'var(--color-info-bg)',
+        background: 'var(--color-info-bg)',
         border: '1px solid var(--color-info-border)', borderRadius: 'var(--radius-md)',
         padding: '1rem 1.25rem', fontSize: '0.8125rem', color: 'var(--color-info-text)', lineHeight: 1.6,
       }}>
