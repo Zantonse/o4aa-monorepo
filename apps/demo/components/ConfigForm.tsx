@@ -15,6 +15,8 @@ export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pasteError, setPasteError] = useState<string | null>(null);
+  const [pasteSuccess, setPasteSuccess] = useState(false);
 
   function update(key: keyof DemoConfig, value: string) {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -66,8 +68,75 @@ export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
     window.location.reload();
   }
 
+  async function handlePaste() {
+    setPasteError(null);
+    setPasteSuccess(false);
+    try {
+      const text = await navigator.clipboard.readText();
+      const parsed = JSON.parse(text);
+      if (typeof parsed !== 'object' || !parsed.clientId) {
+        throw new Error('Invalid config JSON — missing clientId');
+      }
+      setConfig(prev => {
+        const updated = { ...prev };
+        for (const key of Object.keys(prev) as Array<keyof DemoConfig>) {
+          if (typeof parsed[key] === 'string' && parsed[key]) {
+            updated[key] = parsed[key];
+          }
+        }
+        return updated;
+      });
+      setPasteSuccess(true);
+      setSaved(false);
+      setTimeout(() => setPasteSuccess(false), 3000);
+    } catch (err) {
+      setPasteError(err instanceof Error ? err.message : 'Failed to parse clipboard content as config JSON');
+    }
+  }
+
   return (
     <div>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '0.75rem',
+        paddingBottom: '1.25rem', marginBottom: '1.25rem',
+        borderBottom: '1px solid var(--color-border)',
+      }}>
+        <button
+          onClick={handlePaste}
+          style={{
+            background: 'transparent', border: '1px solid var(--color-primary-600)',
+            borderRadius: 'var(--radius-sm)', padding: '0.5rem 1rem',
+            fontSize: '0.8125rem', color: 'var(--color-primary-600)',
+            cursor: 'pointer', fontWeight: 500,
+          }}
+        >
+          Paste Config JSON
+        </button>
+        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+          from O4AA Config Clipboard extension
+        </span>
+      </div>
+
+      {pasteSuccess && (
+        <div style={{
+          background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)',
+          borderRadius: 'var(--radius-sm)', padding: '0.625rem 0.875rem',
+          fontSize: '0.8125rem', color: 'var(--color-success-text)', marginBottom: '1rem',
+        }}>
+          Config pasted successfully. Review the values below and click Save.
+        </div>
+      )}
+
+      {pasteError && (
+        <div style={{
+          background: 'oklch(0.98 0.02 25)', border: '1px solid oklch(0.88 0.10 25)',
+          borderRadius: 'var(--radius-sm)', padding: '0.625rem 0.875rem',
+          fontSize: '0.8125rem', color: 'oklch(0.40 0.15 25)', marginBottom: '1rem',
+        }}>
+          {pasteError}
+        </div>
+      )}
+
       {CONFIG_FIELDS.map(group => (
         <div key={group.group} style={{ marginBottom: '1.5rem' }}>
           <h3 style={{
