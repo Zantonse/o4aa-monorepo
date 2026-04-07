@@ -67,7 +67,7 @@ async function postForm(
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const config  = getConfig();
+  const config  = await getConfig();
   const requestOrigin = new URL(req.url).origin;
   const origin  = baseUrl(config.redirectUri, requestOrigin);
   const flowUrl = `${origin}/flow`;

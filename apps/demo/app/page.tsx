@@ -1,10 +1,14 @@
 import Link from 'next/link';
+import { hasConfig } from '@/lib/config';
+import ConfigForm from '@/components/ConfigForm';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const configured = await hasConfig();
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Hero */}
-      <div className="text-center mb-12">
+      <div className="text-center mb-10">
         <div
           style={{
             display: 'inline-flex',
@@ -50,20 +54,25 @@ export default function HomePage() {
             color: 'var(--color-text-secondary)',
             lineHeight: 1.6,
             maxWidth: '560px',
-            margin: '0 auto 2.5rem',
+            margin: '0 auto 2rem',
           }}
         >
           Demonstrates how an AI agent bootstraps trust using a user&apos;s identity —
           exchanging an ID token for a scoped access token via the JAG grant type.
         </p>
 
-        <Link href="/api/auth/login" className="btn-primary" style={{ fontSize: '1rem', padding: '0.75rem 1.75rem' }}>
-          Start Flow
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </Link>
+        {configured && (
+          <Link href="/api/auth/login" className="btn-primary" style={{ fontSize: '1rem', padding: '0.75rem 1.75rem' }}>
+            Start Flow
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+        )}
       </div>
+
+      {/* Config form */}
+      <ConfigForm hasExisting={configured} />
 
       {/* Flow overview */}
       <div className="card" style={{ padding: '2rem', marginBottom: '2rem' }}>
@@ -102,7 +111,6 @@ export default function HomePage() {
             },
           ].map((item, idx, arr) => (
             <div key={item.step} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-              {/* Connector line column */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '2rem', flexShrink: 0 }}>
                 <div
                   style={{
@@ -124,18 +132,10 @@ export default function HomePage() {
                   {item.step}
                 </div>
                 {idx < arr.length - 1 && (
-                  <div
-                    style={{
-                      width: '2px',
-                      height: '2.5rem',
-                      background: 'var(--color-border)',
-                    }}
-                  />
+                  <div style={{ width: '2px', height: '2.5rem', background: 'var(--color-border)' }} />
                 )}
               </div>
-
-              {/* Content */}
-              <div style={{ paddingTop: '0.3rem', paddingBottom: idx < arr.length - 1 ? '0' : '0', flex: 1, minWidth: 0 }}>
+              <div style={{ paddingTop: '0.3rem', flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, color: 'var(--color-text)', fontSize: '0.9375rem', marginBottom: '0.25rem' }}>
                   {item.label}
                 </div>
@@ -150,61 +150,29 @@ export default function HomePage() {
       </div>
 
       {/* Two-column info cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div className="card" style={{ padding: '1.5rem' }}>
-          <h3
-            style={{
-              fontSize: '0.8125rem',
-              fontWeight: 600,
-              color: 'var(--color-text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              marginBottom: '0.875rem',
-            }}
-          >
+          <h3 style={{
+            fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)',
+            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem',
+          }}>
             Grant Type
           </h3>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: 'var(--color-primary-600)', wordBreak: 'break-all' }}>
             urn:ietf:params:oauth:<br />grant-type:token-exchange
           </p>
         </div>
-
         <div className="card" style={{ padding: '1.5rem' }}>
-          <h3
-            style={{
-              fontSize: '0.8125rem',
-              fontWeight: 600,
-              color: 'var(--color-text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              marginBottom: '0.875rem',
-            }}
-          >
+          <h3 style={{
+            fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)',
+            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem',
+          }}>
             Auth Method
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
             PKCE + private_key_jwt client assertion
           </p>
         </div>
-      </div>
-
-      {/* Prerequisites note */}
-      <div
-        style={{
-          background: 'var(--color-warn-bg)',
-          border: '1px solid var(--color-warn-border)',
-          borderRadius: 'var(--radius-md)',
-          padding: '1rem 1.25rem',
-          fontSize: '0.875rem',
-          color: 'var(--color-warn-text)',
-          lineHeight: 1.6,
-        }}
-      >
-        <strong>Prerequisites:</strong> Configure environment variables in{' '}
-        <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>.env.local</code> before
-        starting the flow. See{' '}
-        <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>README.md</code> for
-        required values.
       </div>
     </div>
   );

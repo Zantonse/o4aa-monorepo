@@ -1,45 +1,61 @@
+import 'server-only';
+
+import { cookies } from 'next/headers';
+import { decrypt } from './session';
+import { CONFIG_COOKIE_NAME, type DemoConfig } from './config-shared';
+
+// Re-export shared types for convenience
+export type { DemoConfig } from './config-shared';
+export { CONFIG_COOKIE_NAME, CONFIG_FIELDS } from './config-shared';
+
 /**
- * Centralised environment variable config.
- * Accessed at runtime — not validated at import time so the app
- * can start without a full .env.local (helpful during development).
+ * Read config from the encrypted cookie first, then fall back to env vars.
+ * This lets the demo app work without any env vars — users paste config
+ * into the UI form, which stores it in a cookie.
  */
+export async function getConfig(): Promise<DemoConfig & { sessionSecret: string }> {
+  // Try cookie first
+  const cookieStore = await cookies();
+  const raw = cookieStore.get(CONFIG_COOKIE_NAME)?.value;
+  if (raw) {
+    const saved = decrypt(raw) as DemoConfig | null;
+    if (saved && saved.clientId) {
+      return { ...saved, sessionSecret: process.env.SESSION_SECRET || 'o4aa-demo-session-key-not-for-production' };
+    }
+  }
 
-function required(name: string): string {
-  const val = process.env[name];
-  if (!val) throw new Error(`Missing required environment variable: ${name}`);
-  return val;
-}
+  // Fall back to env vars
+  function required(name: string): string {
+    const val = process.env[name];
+    if (!val) throw new Error(`Missing required environment variable: ${name}`);
+    return val;
+  }
 
-function optional(name: string, fallback = ''): string {
-  return process.env[name] ?? fallback;
-}
-
-export function getConfig() {
   return {
-    // Okta OIDC app (human-facing, PKCE)
-    clientId:     required('CLIENT_ID'),
+    clientId: required('CLIENT_ID'),
     clientSecret: required('CLIENT_SECRET'),
-    oktaIssuer:   required('OKTA_ISSUER'),
-    redirectUri:  required('REDIRECT_URI'),
-
-    // Agent OAuth client (private_key_jwt)
-    agentClientId:    required('AGENT_CLIENT_ID'),
+    oktaIssuer: required('OKTA_ISSUER'),
+    redirectUri: required('REDIRECT_URI'),
+    agentClientId: required('AGENT_CLIENT_ID'),
     agentPrivateKeyJwk: required('AGENT_PRIVATE_KEY_JWK'),
-    agentKeyId:       required('AGENT_KEY_ID'),
-
-    // JAG (JWT Authorization Grant) parameters
-    jagIssuer:         required('JAG_ISSUER'),
-    jagAudience:       required('JAG_AUDIENCE'),
+    agentKeyId: required('AGENT_KEY_ID'),
+    jagIssuer: required('JAG_ISSUER'),
+    jagAudience: required('JAG_AUDIENCE'),
     jagTargetAudience: required('JAG_TARGET_AUDIENCE'),
-    jagScope:          optional('JAG_SCOPE', 'openid'),
-
-    // Resource server
-    resourceAudience:       required('RESOURCE_AUDIENCE'),
-    resourceTokenEndpoint:  required('RESOURCE_TOKEN_ENDPOINT'),
-
-    // Session encryption
+    jagScope: process.env.JAG_SCOPE ?? 'openid',
+    resourceAudience: required('RESOURCE_AUDIENCE'),
+    resourceTokenEndpoint: required('RESOURCE_TOKEN_ENDPOINT'),
     sessionSecret: required('SESSION_SECRET'),
   };
 }
 
-export type Config = ReturnType<typeof getConfig>;
+/** Check if config cookie exists (for the landing page to decide what to show). */
+export async function hasConfig(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get(CONFIG_COOKIE_NAME)?.value;
+  if (!raw) return !!process.env.CLIENT_ID;
+  const saved = decrypt(raw) as DemoConfig | null;
+  return !!(saved && saved.clientId);
+}
+
+export type Config = DemoConfig & { sessionSecret: string };

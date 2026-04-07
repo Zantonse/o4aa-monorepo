@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(_req: NextRequest): Promise<NextResponse> {
   try {
-    const config = getConfig();
+    const config = await getConfig();
 
     // 1. Generate PKCE pair and CSRF state
     const pkce  = await generatePKCE();
