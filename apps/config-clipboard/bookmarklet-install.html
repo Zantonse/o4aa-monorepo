@@ -15,43 +15,67 @@
     .step-text { padding-top: 3px; }
     code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.85rem; }
     .note { background: #fff8e6; border: 1px solid #e6d28a; border-radius: 8px; padding: 12px 16px; font-size: 0.875rem; margin-top: 2rem; }
+    .features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1.5rem 0; }
+    .feature { background: #f8f9fc; border: 1px solid #e8e8ec; border-radius: 8px; padding: 12px; }
+    .feature strong { font-size: 0.8rem; color: #2d3570; display: block; margin-bottom: 4px; }
+    .feature span { font-size: 0.8rem; color: #666; }
   </style>
 </head>
 <body>
   <h1>O4AA Config Clipboard</h1>
-  <p class="subtitle">One-click config extraction from the Okta admin console</p>
+  <p class="subtitle">One-click config extraction from the Okta admin console — no extension required</p>
 
   <div class="install-box">
     <p style="margin-bottom: 1rem; font-size: 0.875rem; color: #666;">Drag this button to your bookmarks bar:</p>
-    <a class="bookmarklet-link" href="javascript:void(function(){var S='o4aa_config';var prev=JSON.parse(sessionStorage.getItem(S)||'{}');var h=location.hostname;var p=location.pathname;var vals={};if(h.match(/\.okta\.com$|\.oktapreview\.com$/)){vals.oktaIssuer='https://'+h;vals.redirectUri='https://o4aa-demo.vercel.app/api/auth/callback';vals.jagIssuer='https://'+h+'/oauth2';vals.jagAudience='https://'+h+'/oauth2/v1/token';if(!prev.jagScope)vals.jagScope='ai_agent'}if(p.match(/\/admin\/app\/oidc_client\/instance\//)){var el=document.querySelector('[data-se=%22client-id%22] input')||document.querySelector('[data-se=%22client-id%22]');if(el)vals.clientId=(el.value||el.textContent||'').trim();if(!vals.clientId){var m=document.body.innerText.match(/\b(0oa[a-zA-Z0-9]{10,})\b/);if(m)vals.clientId=m[1]}}if(p.match(/\/admin\/people\/workload\//)){var wm=p.match(/\/workload\/(wlp_[a-zA-Z0-9]+)/);if(wm)vals.agentClientId=wm[1];if(!vals.agentClientId){var wm2=document.body.innerText.match(/\b(wlp_[a-zA-Z0-9]+)\b/);if(wm2)vals.agentClientId=wm2[1]}}var asm=p.match(/\/admin\/oauth2\/as\/(aus[a-zA-Z0-9]+)/);if(asm%26%26h){var sid=asm[1];vals.jagTargetAudience='https://'+h+'/oauth2/'+sid;vals.resourceAudience='https://'+h+'/oauth2/'+sid+'/v1/token';vals.resourceTokenEndpoint='https://'+h+'/oauth2/'+sid+'/v1/token'}var sel=(window.getSelection()||'').toString().trim();if(sel%26%26sel.length>0%26%26sel.length<5000){var fields=[{k:'clientSecret',l:'Client Secret'},{k:'agentClientId',l:'Agent Client ID'},{k:'agentPrivateKeyJwk',l:'Agent Private Key (JWK)'},{k:'agentKeyId',l:'Agent Key ID'},{k:'jagScope',l:'JAG Scope'},{k:'clientId',l:'Client ID'}];var opts=fields.map(function(f,i){return(i+1)+'. '+f.l}).join('\n');var choice=prompt('Assign selected text to which field?\n\n'+opts+'\n\nEnter number (or cancel):');if(choice){var idx=parseInt(choice)-1;if(idx>=0%26%26idx<fields.length)vals[fields[idx].k]=sel}}var merged={};var allKeys=['clientId','clientSecret','oktaIssuer','redirectUri','agentClientId','agentPrivateKeyJwk','agentKeyId','jagIssuer','jagAudience','jagTargetAudience','jagScope','resourceAudience','resourceTokenEndpoint'];allKeys.forEach(function(k){merged[k]=vals[k]||prev[k]||''});sessionStorage.setItem(S,JSON.stringify(merged));var filled=allKeys.filter(function(k){return merged[k]!==''}).length;navigator.clipboard.writeText(JSON.stringify(merged,null,2)).then(function(){alert('O4AA Config ('+filled+'/'+allKeys.length+' fields)\n\nCopied to clipboard!\n\n'+(filled<allKeys.length?'Missing: '+allKeys.filter(function(k){return merged[k]===''}).join(', '):'All fields collected!'))}).catch(function(){var ta=document.createElement('textarea');ta.value=JSON.stringify(merged,null,2);document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('Copied! '+filled+'/'+allKeys.length+' fields')})}())">
-      O4AA Config Clipboard
+    <a class="bookmarklet-link" href="javascript:void(document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://o4aa-demo.vercel.app/config-clipboard.js?v='+Date.now()})))">
+      O4AA Config
     </a>
+    <p style="margin-top: 1rem; font-size: 0.75rem; color: #999;">Works in managed Chrome — no extension install needed</p>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      <strong>Floating Panel</strong>
+      <span>Draggable config checklist shows all 13 fields with status indicators</span>
+    </div>
+    <div class="feature">
+      <strong>Auto-Extract</strong>
+      <span>Detects OIDC apps, Auth Servers, and Workload Principals automatically</span>
+    </div>
+    <div class="feature">
+      <strong>Smart Capture</strong>
+      <span>Highlight text, click bookmarklet, pick the field from a dropdown</span>
+    </div>
+    <div class="feature">
+      <strong>One-Click Copy</strong>
+      <span>Copies the full DemoConfig JSON to clipboard, ready to paste</span>
+    </div>
   </div>
 
   <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">How to Use</h2>
 
   <div class="step">
     <div class="step-num">1</div>
-    <div class="step-text">Go to your <strong>OIDC App</strong> page in Okta Admin → click the bookmarklet. It grabs the Client ID and derives the Issuer URLs.</div>
+    <div class="step-text">Go to your <strong>OIDC App</strong> page in Okta Admin, click the bookmarklet. The floating panel appears with Client ID and 5 derived URLs auto-filled.</div>
   </div>
 
   <div class="step">
     <div class="step-num">2</div>
-    <div class="step-text">Go to the <strong>Custom Auth Server</strong> page → click the bookmarklet. It grabs the server ID and derives all JAG + Resource endpoint URLs.</div>
+    <div class="step-text">Navigate to the <strong>Custom Auth Server</strong> page, click again. Server ID is extracted and 3 more URLs are derived. Panel updates.</div>
   </div>
 
   <div class="step">
     <div class="step-num">3</div>
-    <div class="step-text">For manual values (Client Secret, JWK, Key ID): <strong>highlight the text</strong> on the page, then click the bookmarklet. It prompts you to assign the selection to a field.</div>
+    <div class="step-text">For manual values: <strong>highlight text</strong> on the page (Client Secret, JWK, Key ID), then click the bookmarklet. A dropdown appears — pick the field to assign it to.</div>
   </div>
 
   <div class="step">
     <div class="step-num">4</div>
-    <div class="step-text">Go to the demo app at <a href="https://o4aa-demo.vercel.app/settings">/settings</a> → click <strong>"Paste Config JSON"</strong>. All collected values fill in automatically.</div>
+    <div class="step-text">Click <strong>"Copy Config JSON"</strong> in the panel, go to <a href="https://o4aa-demo.vercel.app/settings">o4aa-demo.vercel.app/settings</a>, click <strong>"Paste Config JSON"</strong>. Done.</div>
   </div>
 
   <div class="note">
-    <strong>How it works:</strong> Each click accumulates values in <code>sessionStorage</code> (cleared when you close the tab). The bookmarklet auto-detects which Okta admin page you're on, extracts what it can from the DOM, and merges with previously collected values. The JSON is copied to your clipboard on every click so you always have the latest state.
+    <strong>How it works:</strong> The bookmarklet loads a script from <code>o4aa-demo.vercel.app</code> that injects a floating panel into the current page. Values accumulate in <code>sessionStorage</code> as you navigate between Okta admin pages (cleared when you close the tab). The panel is draggable, shows field-level status, and copies the complete config JSON to your clipboard.
   </div>
 </body>
 </html>
