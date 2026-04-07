@@ -1,0 +1,15 @@
+{
+  "name": "o4aa-config-clipboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsx build.ts",
+    "watch": "tsx build.ts --watch"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.300",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5"
+  }
+}
