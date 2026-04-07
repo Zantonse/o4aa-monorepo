@@ -13,14 +13,14 @@ const EMPTY_CONFIG: DemoConfig = {
 export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
   const [config, setConfig] = useState<DemoConfig>(EMPTY_CONFIG);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(!hasExisting);
 
   function update(key: keyof DemoConfig, value: string) {
     setConfig(prev => ({ ...prev, [key]: value }));
+    setSaved(false);
   }
 
-  // Auto-derive dependent fields from oktaIssuer when it changes
   function onIssuerChange(value: string) {
     const base = value.replace(/\/$/, '');
     setConfig(prev => ({
@@ -30,13 +30,13 @@ export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
       jagIssuer: prev.jagIssuer || `${base}/oauth2`,
       jagAudience: prev.jagAudience || `${base}/oauth2/v1/token`,
     }));
+    setSaved(false);
   }
 
   async function handleSave() {
     setSaving(true);
     setError(null);
 
-    // Auto-fill redirect URI if blank
     if (!config.redirectUri) {
       config.redirectUri = `${window.location.origin}/api/auth/callback`;
     }
@@ -51,10 +51,10 @@ export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
         const data = await res.json();
         throw new Error(data.error || 'Failed to save');
       }
-      // Redirect to start the flow
-      window.location.href = '/api/auth/login';
+      setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save configuration');
+    } finally {
       setSaving(false);
     }
   }
@@ -62,68 +62,14 @@ export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
   async function handleClear() {
     await fetch('/api/config', { method: 'DELETE' });
     setConfig(EMPTY_CONFIG);
-    setExpanded(true);
+    setSaved(false);
     window.location.reload();
   }
 
-  if (!expanded) {
-    return (
-      <div style={{
-        display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap',
-        background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)',
-        borderRadius: 'var(--radius-md)', padding: '0.875rem 1.25rem',
-      }}>
-        <span style={{ color: 'var(--color-success-text)', fontSize: '0.875rem', fontWeight: 500, flex: 1 }}>
-          Configuration saved. Ready to run the flow.
-        </span>
-        <button
-          onClick={() => setExpanded(true)}
-          style={{
-            background: 'transparent', border: '1px solid var(--color-success-border)',
-            borderRadius: 'var(--radius-sm)', padding: '0.375rem 0.75rem',
-            fontSize: '0.8125rem', color: 'var(--color-success-text)', cursor: 'pointer',
-          }}
-        >
-          Edit Config
-        </button>
-        <button
-          onClick={handleClear}
-          style={{
-            background: 'transparent', border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-sm)', padding: '0.375rem 0.75rem',
-            fontSize: '0.8125rem', color: 'var(--color-text-muted)', cursor: 'pointer',
-          }}
-        >
-          Clear
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-        <h2 style={{
-          fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)',
-          textTransform: 'uppercase', letterSpacing: '0.08em',
-        }}>
-          Configuration
-        </h2>
-        {hasExisting && (
-          <button
-            onClick={() => setExpanded(false)}
-            style={{
-              background: 'transparent', border: 'none', color: 'var(--color-text-muted)',
-              fontSize: '0.8125rem', cursor: 'pointer', textDecoration: 'underline',
-            }}
-          >
-            Collapse
-          </button>
-        )}
-      </div>
-
+    <div>
       {CONFIG_FIELDS.map(group => (
-        <div key={group.group} style={{ marginBottom: '1.25rem' }}>
+        <div key={group.group} style={{ marginBottom: '1.5rem' }}>
           <h3 style={{
             fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary-600)',
             textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem',
@@ -187,6 +133,20 @@ export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
         </div>
       )}
 
+      {saved && (
+        <div style={{
+          background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)',
+          borderRadius: 'var(--radius-sm)', padding: '0.625rem 0.875rem',
+          fontSize: '0.8125rem', color: 'var(--color-success-text)', marginBottom: '1rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <span>Configuration saved. You can now run the flow from the home page.</span>
+          <a href="/" style={{ color: 'var(--color-success-text)', fontWeight: 600, textDecoration: 'underline' }}>
+            Go to Home
+          </a>
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
         <button
           onClick={handleSave}
@@ -194,7 +154,7 @@ export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
           className="btn-primary"
           style={{ fontSize: '0.875rem', padding: '0.625rem 1.25rem', opacity: saving ? 0.6 : 1 }}
         >
-          {saving ? 'Saving...' : 'Save & Start Flow'}
+          {saving ? 'Saving...' : 'Save Configuration'}
         </button>
         {hasExisting && (
           <button

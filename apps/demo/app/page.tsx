@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { hasConfig } from '@/lib/config';
-import ConfigForm from '@/components/ConfigForm';
 
 export default async function HomePage() {
   const configured = await hasConfig();
@@ -61,18 +60,38 @@ export default async function HomePage() {
           exchanging an ID token for a scoped access token via the JAG grant type.
         </p>
 
-        {configured && (
-          <Link href="/api/auth/login" className="btn-primary" style={{ fontSize: '1rem', padding: '0.75rem 1.75rem' }}>
-            Start Flow
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
+        {configured ? (
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', alignItems: 'center' }}>
+            <Link href="/api/auth/login" className="btn-primary" style={{ fontSize: '1rem', padding: '0.75rem 1.75rem' }}>
+              Start Flow
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+            <Link
+              href="/settings"
+              style={{
+                fontSize: '0.875rem', color: 'var(--color-text-muted)',
+                textDecoration: 'none', padding: '0.75rem 1rem',
+              }}
+            >
+              Settings
+            </Link>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <Link href="/settings" className="btn-primary" style={{ fontSize: '1rem', padding: '0.75rem 1.75rem' }}>
+              Configure Okta Settings
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+            <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+              Set up your Okta environment before running the flow
+            </span>
+          </div>
         )}
       </div>
-
-      {/* Config form */}
-      <ConfigForm hasExisting={configured} />
 
       {/* Flow overview */}
       <div className="card" style={{ padding: '2rem', marginBottom: '2rem' }}>
@@ -94,18 +113,18 @@ export default async function HomePage() {
             {
               step: '1',
               label: 'User Authenticates',
-              detail: 'PKCE auth code flow → ID token from Okta',
+              detail: 'PKCE auth code flow \u2192 ID token from Okta',
               color: 'var(--color-primary-500)',
             },
             {
               step: '2',
-              label: 'ID Token → JAG Token',
+              label: 'ID Token \u2192 JAG Token',
               detail: 'Token exchange with client_assertion at JAG issuer',
               color: 'var(--color-primary-500)',
             },
             {
               step: '3',
-              label: 'JAG Token → Access Token',
+              label: 'JAG Token \u2192 Access Token',
               detail: 'Scoped access token for the resource server',
               color: 'var(--color-primary-500)',
             },

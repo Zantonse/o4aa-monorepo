@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,30 +16,35 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className="min-h-full flex flex-col">
         {/* Top navbar */}
-        <header style={{ background: '#00297A', borderBottom: '1px solid #001d5a' }} className="sticky top-0 z-50">
+        <header style={{ background: 'var(--color-primary-700)', borderBottom: '1px solid var(--color-primary-800)' }} className="sticky top-0 z-50">
           <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <span style={{ color: 'white', fontWeight: 700, fontSize: '1.0625rem', lineHeight: 1 }}>
                 Okta
               </span>
               <span style={{ color: '#93c5fd', fontWeight: 400, fontSize: '1.0625rem', lineHeight: 1 }}>
                 JAG Demo
               </span>
-              <span style={{ color: '#60a5fa', margin: '0 4px', fontWeight: 300, fontSize: '1.125rem', lineHeight: 1 }}>
-                |
-              </span>
-              <span style={{ color: '#bfdbfe', fontSize: '0.8125rem' }}>
+              <span className="hidden sm:inline" style={{ color: '#bfdbfe', fontSize: '0.8125rem', marginLeft: '0.5rem' }}>
                 JWT Authorization Grant Token Exchange
               </span>
+            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/settings"
+                style={{ color: '#93c5fd', fontSize: '0.8125rem', textDecoration: 'none' }}
+              >
+                Settings
+              </Link>
+              <a
+                href="https://developer.okta.com/docs/guides/implement-grant-type/clientcreds/main/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#93c5fd', fontSize: '0.8125rem', textDecoration: 'none' }}
+              >
+                Docs
+              </a>
             </div>
-            <a
-              href="https://developer.okta.com/docs/guides/implement-grant-type/clientcreds/main/"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#93c5fd', fontSize: '0.8125rem', textDecoration: 'none' }}
-            >
-              Docs
-            </a>
           </div>
         </header>
 
