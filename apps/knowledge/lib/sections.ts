@@ -41,6 +41,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { slug: 'obo-flow', label: 'On-Behalf-Of (OBO)', icon: '🔄', iconImage: 'icons/obo-flow.png' },
       { slug: 'id-jag', label: 'ID-JAG Protocol', icon: '🪪', iconImage: 'icons/id-card.png' },
       { slug: 'xaa-deep-dive', label: 'XAA Deep Dive', icon: '🔗', iconImage: 'icons/chain-link.png', isNew: true },
+      { slug: 'agent-relay', label: 'Agent Relay', icon: '🔗', iconImage: 'icons/chain-link.png', isNew: true },
       { slug: 'ciba', label: 'CIBA (Human-in-Loop)', icon: '✋', iconImage: 'icons/hand-approve.png', isNew: true },
       { slug: 'managed-connections', label: 'Managed Connections', icon: '🔗', iconImage: 'icons/chain-link.png', isNew: true },
     ],
@@ -50,6 +51,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { slug: 'nhi-management', label: 'NHI Management', icon: '🤖', iconImage: 'icons/ai-agent.png', isNew: true },
       { slug: 'workload-principals', label: 'Workload Principals', icon: '👤', iconImage: 'icons/identity.png', isNew: true },
+      { slug: 'agent-rag', label: 'RAG Authorization', icon: '📄', iconImage: 'icons/lock-circuit.png', isNew: true },
       { slug: 'integration-guides', label: 'Integration Guides', icon: '🔧', iconImage: 'icons/tools.png', isNew: true },
       { slug: 's2s-m2m-patterns', label: 'S2S & M2M Patterns', icon: '🔐', iconImage: 'icons/lock-circuit.png', isNew: true },
     ],

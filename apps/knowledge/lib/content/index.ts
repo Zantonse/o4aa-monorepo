@@ -31,6 +31,8 @@ import { content as customerEvidence } from './customer-evidence';
 import { content as glossary } from './glossary';
 import { content as managedConnections } from './managed-connections';
 import { content as workloadPrincipals } from './workload-principals';
+import { content as agentRag } from './agent-rag';
+import { content as agentRelay } from './agent-relay';
 
 export const CONTENT_MAP: Record<string, SectionContent> = {
   'ai-agents-101': aiAgents101,
@@ -65,4 +67,6 @@ export const CONTENT_MAP: Record<string, SectionContent> = {
   'glossary': glossary,
   'managed-connections': managedConnections,
   'workload-principals': workloadPrincipals,
+  'agent-rag': agentRag,
+  'agent-relay': agentRelay,
 };
