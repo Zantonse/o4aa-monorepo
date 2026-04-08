@@ -357,24 +357,75 @@ export default function SetupGuide() {
           </a>
         </p>
         <p style={{ marginBottom: '0.5rem' }}>
-          <strong>Prerequisite — Auth Server setup:</strong>
+          <strong>Prerequisite — Create the Custom Authorization Server:</strong>
         </p>
         <ol style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
           <li>
             Go to <strong>Security &rarr; API &rarr; Authorization Servers</strong>
           </li>
           <li>
-            Use an existing Custom Authorization Server or click <strong>Add Authorization Server</strong>
-          </li>
-          <li>
-            Under the <strong>Scopes</strong> tab, add any scopes the agent will request
-            (e.g. <InlineCode>ai_agent</InlineCode> or MCP scopes like <InlineCode>mcp:connect</InlineCode>)
-          </li>
-          <li>
-            Under the <strong>Access Policies</strong> tab, create a policy and rule that allows the
-            JWT bearer grant type for the AI agent
+            Click <strong>Add Authorization Server</strong> and fill in:
           </li>
         </ol>
+
+        <FieldTable
+          rows={[
+            ['Name', 'JAG Server (or any descriptive name)'],
+            ['Audience', 'api://jag-demo (any URI — this appears in the aud claim of issued tokens)'],
+            ['Description', 'Custom auth server for JAG token exchange demo'],
+          ]}
+        />
+
+        <ol start={3} style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
+          <li>
+            Click <strong>Save</strong>. Note the <strong>Issuer URI</strong> shown on the Settings tab &mdash;
+            it contains the <InlineCode>aus...</InlineCode> auth server ID you need for the demo config
+          </li>
+          <li>
+            Go to the <strong>Scopes</strong> tab &rarr; click <strong>Add Scope</strong>:
+          </li>
+        </ol>
+
+        <FieldTable
+          rows={[
+            ['Name', 'ai_agent'],
+            ['Display phrase', 'AI Agent access (optional — shown on consent screens)'],
+            ['Description', 'Scope for AI agent token exchange'],
+          ]}
+        />
+
+        <ol start={5} style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
+          <li>
+            Go to the <strong>Access Policies</strong> tab &rarr; click <strong>Add New Access Policy</strong>:
+          </li>
+        </ol>
+
+        <FieldTable
+          rows={[
+            ['Name', 'JAG Agent Policy'],
+            ['Description', 'Allow AI agent to exchange tokens'],
+            ['Assign to', 'The following clients — select your AI agent from the dropdown'],
+          ]}
+        />
+
+        <ol start={6} style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
+          <li>
+            Click <strong>Create Policy</strong>, then click <strong>Add Rule</strong>:
+          </li>
+        </ol>
+
+        <FieldTable
+          rows={[
+            ['Name', 'Allow JWT Bearer'],
+            ['Grant type', 'Check: JWT Bearer (under Advanced if not visible)'],
+            ['Scopes', 'The following scopes: ai_agent'],
+          ]}
+        />
+
+        <Tip>
+          After saving the rule, your auth server is ready. The bookmarklet will auto-extract the{' '}
+          <InlineCode>aus...</InlineCode> server ID when you navigate to this auth server&apos;s page.
+        </Tip>
         <p style={{ marginBottom: '0.5rem' }}>
           <strong>Add the Managed Connection:</strong>
         </p>
