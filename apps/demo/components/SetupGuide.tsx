@@ -156,6 +156,28 @@ function FieldTable({ rows }: { rows: [string, string][] }) {
   );
 }
 
+function GuideImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div
+      style={{
+        marginTop: '0.75rem',
+        marginBottom: '0.75rem',
+        borderRadius: '6px',
+        overflow: 'hidden',
+        border: '1px solid var(--color-border)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        style={{ width: '100%', height: 'auto', display: 'block' }}
+      />
+    </div>
+  );
+}
+
 function Tip({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -219,14 +241,19 @@ export default function SetupGuide() {
             Set the <strong>Sign-in redirect URI</strong> to your callback URL
             (e.g. <InlineCode>https://o4aa-demo.vercel.app/api/auth/callback</InlineCode> or <InlineCode>http://localhost:3002/api/auth/callback</InlineCode> for local dev)
           </li>
+        </ol>
+
+        <GuideImage src="/guide/redirect-uri.png" alt="Sign-in redirect URIs field in Okta admin console" />
+
+        <ol start={4} style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <li>
-            Under <strong>General Settings</strong>, enable <strong>Federation Broker Mode</strong> &mdash; this
+            Under <strong>Assignments</strong>, select <strong>Allow everyone in your organization to access</strong> and
+            check <strong>Enable immediate access with Federation Broker Mode</strong> &mdash; this
             is required for the OIDC app to participate in cross-app token exchange
           </li>
-          <li>
-            Under <strong>Assignments</strong>, assign the users who should be able to run the demo
-          </li>
         </ol>
+
+        <GuideImage src="/guide/federation-broker-mode.png" alt="Federation Broker Mode checkbox in Okta admin console Assignments section" />
 
         <FieldTable
           rows={[
