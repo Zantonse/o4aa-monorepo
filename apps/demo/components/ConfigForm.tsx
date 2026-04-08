@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CONFIG_FIELDS, type DemoConfig } from '@/lib/config-shared';
 
 const EMPTY_CONFIG: DemoConfig = {
@@ -14,9 +14,28 @@ export default function ConfigForm({ hasExisting }: { hasExisting: boolean }) {
   const [config, setConfig] = useState<DemoConfig>(EMPTY_CONFIG);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [pasteSuccess, setPasteSuccess] = useState(false);
+
+  // Load saved config on mount
+  useEffect(() => {
+    if (hasExisting && !loaded) {
+      fetch('/api/config')
+        .then(res => res.json())
+        .then(data => {
+          if (data.config) {
+            setConfig(data.config);
+            setSaved(true);
+          }
+        })
+        .catch(() => { /* ignore — form stays empty */ })
+        .finally(() => setLoaded(true));
+    } else {
+      setLoaded(true);
+    }
+  }, [hasExisting, loaded]);
 
   function update(key: keyof DemoConfig, value: string) {
     setConfig(prev => ({ ...prev, [key]: value }));

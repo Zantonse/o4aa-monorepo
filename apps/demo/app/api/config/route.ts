@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { encrypt, serializeCookie } from '@/lib/session';
+import { encrypt, decrypt } from '@/lib/session';
 import { CONFIG_COOKIE_NAME, type DemoConfig } from '@/lib/config-shared';
+
+/** GET — return the saved config so the form can reload it. Secrets are masked. */
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const raw = req.cookies.get(CONFIG_COOKIE_NAME)?.value;
+  if (!raw) {
+    return NextResponse.json({ config: null });
+  }
+  const saved = decrypt(raw) as DemoConfig | null;
+  if (!saved || !saved.clientId) {
+    return NextResponse.json({ config: null });
+  }
+
+  // Mask sensitive fields — show enough to confirm they're set, not the full value
+  const masked: DemoConfig = {
+    ...saved,
+    clientSecret: saved.clientSecret ? '\u2022'.repeat(8) : '',
+    agentPrivateKeyJwk: saved.agentPrivateKeyJwk ? '{"alg":"RS256",...} (saved)' : '',
+  };
+
+  return NextResponse.json({ config: masked, hasRealValues: true });
+}
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
