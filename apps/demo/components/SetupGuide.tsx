@@ -203,30 +203,31 @@ export default function SetupGuide() {
       {/* Prerequisites */}
       <Section number={0} title="Prerequisites">
         <p style={{ marginBottom: '0.75rem' }}>
-          Before configuring this demo, you need an Okta org with the <strong>Cross App Access (XAA)</strong> Early
-          Access feature enabled.
+          Before configuring this demo, you need an Okta org with the{' '}
+          <strong>Okta for AI Agents</strong> Early Access feature enabled and a Super Admin role.
         </p>
         <ol style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <li>
             Go to <strong>Admin Console &rarr; Settings &rarr; Features</strong>
           </li>
           <li>
-            Under <strong>Early Access</strong>, enable <InlineCode>Cross App Access</InlineCode>
+            Under <strong>Early Access</strong>, enable{' '}
+            <InlineCode>Okta for AI Agents</InlineCode>
           </li>
           <li>
-            Verify you have admin rights to create OIDC apps, Authorization Servers, and Workload Principals
+            Verify you have Super Admin rights to create OIDC apps, Authorization Servers, and AI Agents
           </li>
         </ol>
         <Tip>
           <strong>No preview org?</strong> You can create one at{' '}
           <a href="https://developer.okta.com/signup/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', fontWeight: 600 }}>
             developer.okta.com/signup
-          </a>. The XAA feature flag is available on all preview orgs during EA.
+          </a>. The Okta for AI Agents feature flag is available on preview orgs during EA.
         </Tip>
       </Section>
 
       {/* Step 1: OIDC Client */}
-      <Section number={1} title="Create the OIDC Client (User Authentication)" defaultOpen>
+      <Section number={1} title="Create the OIDC Web App (User Authentication)" defaultOpen>
         <p style={{ marginBottom: '0.5rem' }}>
           This is the web app that authenticates the user via PKCE and receives the initial ID token.
         </p>
@@ -239,7 +240,8 @@ export default function SetupGuide() {
           </li>
           <li>
             Set the <strong>Sign-in redirect URI</strong> to your callback URL
-            (e.g. <InlineCode>https://o4aa-demo.vercel.app/api/auth/callback</InlineCode> or <InlineCode>http://localhost:3002/api/auth/callback</InlineCode> for local dev)
+            (e.g. <InlineCode>https://o4aa-demo.vercel.app/api/auth/callback</InlineCode> or{' '}
+            <InlineCode>http://localhost:3002/api/auth/callback</InlineCode> for local dev)
           </li>
         </ol>
 
@@ -265,57 +267,99 @@ export default function SetupGuide() {
         />
 
         <Tip>
-          <strong>Federation Broker Mode</strong> must be ON. Without it, the token exchange in Step 2
+          <strong>Federation Broker Mode</strong> must be ON. Without it, the token exchange in Step 3
           will fail with a <InlineCode>400 invalid_grant</InlineCode> error.
         </Tip>
       </Section>
 
-      {/* Step 2: Agent Identity */}
-      <Section number={2} title="Create the AI Agent Identity (Workload Principal)">
+      {/* Step 2: Register the AI Agent */}
+      <Section number={2} title="Register the AI Agent">
         <p style={{ marginBottom: '0.5rem' }}>
-          The agent needs its own identity in Okta &mdash; a Workload Principal with an RSA key pair
-          for <InlineCode>private_key_jwt</InlineCode> client authentication.
+          The agent needs its own identity in Okta. Register it under{' '}
+          <strong>Directory &rarr; AI Agents</strong> and add an RSA key pair for{' '}
+          <InlineCode>private_key_jwt</InlineCode> client authentication.{' '}
+          <a
+            href="https://help.okta.com/okta_help.htm?type=oie&id=ai-agent-register"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'var(--color-primary-600)' }}
+          >
+            Official docs &rarr;
+          </a>
         </p>
         <ol style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <li>
-            Go to <strong>Directory &rarr; People</strong> and switch to the <strong>Workload Identities</strong> tab
+            Go to <strong>Directory &rarr; AI Agents</strong>
           </li>
           <li>
-            Click <strong>Add Workload</strong> and give your agent a name (e.g. &quot;JAG Demo Agent&quot;)
+            Click <strong>Register AI agent</strong>, enter a <strong>Name</strong> and{' '}
+            <strong>Description</strong> (e.g. &quot;JAG Demo Agent&quot;)
           </li>
           <li>
-            On the workload&apos;s detail page, go to the <strong>Credentials</strong> tab
+            Optionally select a <strong>Linked application</strong> &mdash; choose the OIDC app from
+            Step 1. If linked, the agent can only act on a user&apos;s behalf when the user is signed
+            in to that app
           </li>
           <li>
-            Click <strong>Generate Key Pair</strong> &mdash; this creates an RSA key pair.
-            <strong> Download the private key JWK immediately</strong> &mdash; it is only shown once
+            Click <strong>Register</strong>, then assign at least one owner (up to 5 users, or a group
+            with at least 2 members)
           </li>
           <li>
-            Note the <strong>Key ID (kid)</strong> displayed after generation
+            Go to the <strong>Credentials</strong> tab and click <strong>Add public key</strong>
+          </li>
+          <li>
+            Either paste an existing public key, or click <strong>Generate new key</strong> &mdash;
+            Okta creates a key pair. <strong>Copy the private key to clipboard immediately and save
+            it.</strong> Click <strong>Done</strong>.
           </li>
         </ol>
 
+        <Tip>
+          The agent starts in <strong>STAGED</strong> status. It activates automatically once it has
+          at least one owner and one credential.
+        </Tip>
+
         <FieldTable
           rows={[
-            ['Agent Client ID', 'The Workload Principal ID (starts with wlp_)'],
-            ['Agent Private Key (JWK)', 'The full private JWK JSON you downloaded — paste the entire JSON object'],
+            ['Agent Client ID', 'The AI agent\'s client ID — displayed on the agent\'s General tab'],
+            ['Agent Private Key (JWK)', 'The full private key JSON copied during key generation — paste the entire JSON object'],
             ['Agent Key ID', 'The kid value shown in the Credentials tab'],
           ]}
         />
 
         <Tip>
-          <strong>Save the private key somewhere safe.</strong> Okta does not store the private portion.
-          If you lose it, you must generate a new key pair.
+          <strong>Save the private key somewhere safe.</strong> Okta does not store the private
+          portion. If you lose it, you must generate a new key pair.
         </Tip>
       </Section>
 
-      {/* Step 3: Custom Auth Server */}
-      <Section number={3} title="Configure the Custom Authorization Server (JAG Issuer)">
+      {/* Step 3: Managed Connections */}
+      <Section number={3} title="Configure Managed Connections">
         <p style={{ marginBottom: '0.5rem' }}>
-          The JAG token exchange happens at a Custom Authorization Server. This is where the ID token
-          gets exchanged for a JAG assertion, and where the JAG is later presented for a scoped access token.
+          A Managed Connection authorizes the AI agent to use a specific Authorization Server for
+          token exchange. Before adding the connection, ensure the Authorization Server has an access
+          policy that includes the JWT bearer grant type and the required custom scopes.{' '}
+          <a
+            href="https://help.okta.com/okta_help.htm?type=oie&id=ai-agent-secure"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'var(--color-primary-600)' }}
+          >
+            Secure AI agents &rarr;
+          </a>{' '}
+          <a
+            href="https://developer.okta.com/docs/guides/ai-agent-token-exchange/authserver/main/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'var(--color-primary-600)' }}
+          >
+            Token exchange guide &rarr;
+          </a>
         </p>
-        <ol style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ marginBottom: '0.5rem' }}>
+          <strong>Prerequisite — Auth Server setup:</strong>
+        </p>
+        <ol style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
           <li>
             Go to <strong>Security &rarr; API &rarr; Authorization Servers</strong>
           </li>
@@ -323,29 +367,45 @@ export default function SetupGuide() {
             Use an existing Custom Authorization Server or click <strong>Add Authorization Server</strong>
           </li>
           <li>
-            Note the <strong>Issuer URI</strong> (e.g. <InlineCode>https://your-domain.okta.com/oauth2/aus...</InlineCode>)
-            and the <strong>Authorization Server ID</strong> (the <InlineCode>aus...</InlineCode> portion)
-          </li>
-          <li>
             Under the <strong>Scopes</strong> tab, add any scopes the agent will request
             (e.g. <InlineCode>ai_agent</InlineCode> or MCP scopes like <InlineCode>mcp:connect</InlineCode>)
           </li>
           <li>
             Under the <strong>Access Policies</strong> tab, create a policy and rule that allows the
-            token exchange grant type for the agent identity
+            JWT bearer grant type for the AI agent
+          </li>
+        </ol>
+        <p style={{ marginBottom: '0.5rem' }}>
+          <strong>Add the Managed Connection:</strong>
+        </p>
+        <ol style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <li>
+            Go to <strong>Directory &rarr; AI Agents</strong> and select your agent
           </li>
           <li>
-            Set up a <strong>Managed Connection</strong> linking the Workload Principal from Step 2 to this
-            Authorization Server &mdash; this authorizes the agent to use this auth server
+            Click the <strong>Managed Connections</strong> tab, then click <strong>Add connection</strong>
+          </li>
+          <li>
+            Select resource type: <strong>Authorization server</strong>
+          </li>
+          <li>
+            Select the Authorization Server from the dropdown
+          </li>
+          <li>
+            Configure scopes: <strong>Allow all</strong>, <strong>Only allow</strong> specific
+            scopes, or <strong>Disallow</strong> specific scopes
+          </li>
+          <li>
+            Click <strong>Add</strong>
           </li>
         </ol>
 
         <FieldTable
           rows={[
-            ['JAG Issuer', 'Usually https://your-domain.okta.com/oauth2 (the org-level OAuth endpoint)'],
-            ['JAG Audience', 'The token endpoint of the JAG issuer: https://your-domain.okta.com/oauth2/v1/token'],
-            ['JAG Target Audience', 'The Custom Auth Server URI: https://your-domain.okta.com/oauth2/<auth-server-id>'],
-            ['JAG Scope', 'The scope(s) to request — default: ai_agent'],
+            ['JAG Issuer', 'https://{your-domain}.okta.com/oauth2 (the org-level OAuth endpoint)'],
+            ['JAG Audience', 'https://{your-domain}.okta.com/oauth2/v1/token'],
+            ['JAG Target Audience', 'The issuer URL of the resource app\'s auth server — e.g. https://{your-domain}.okta.com/oauth2/{auth-server-id}'],
+            ['JAG Scope', 'The scope(s) configured in the managed connection — default: ai_agent'],
           ]}
         />
       </Section>
@@ -353,22 +413,22 @@ export default function SetupGuide() {
       {/* Step 4: Resource Server */}
       <Section number={4} title="Configure the Resource Server Endpoint">
         <p style={{ marginBottom: '0.5rem' }}>
-          Step 3 of the flow presents the JAG to a token endpoint to get a scoped access token.
-          This is typically the same Custom Authorization Server from Step 3, but it can be a different one
-          if the resource server has its own auth server.
+          The final step of the flow presents the JAG to a token endpoint to get a scoped access
+          token for the protected resource. This is typically the same Custom Authorization Server
+          configured in Step 3, but it can be a separate one if the resource server has its own
+          auth server.
         </p>
 
         <FieldTable
           rows={[
-            ['Resource Audience', 'Token endpoint of the resource auth server (often same as JAG Target Audience + /v1/token)'],
-            ['Resource Token Endpoint', 'Full URL: https://your-domain.okta.com/oauth2/<auth-server-id>/v1/token'],
+            ['Resource Token Endpoint', 'https://{your-domain}.okta.com/oauth2/{auth-server-id}/v1/token'],
           ]}
         />
 
         <Tip>
-          <strong>Same auth server for both?</strong> In many setups, the JAG Target Audience and the Resource
-          Token Endpoint point to the same Custom Authorization Server. Use the same <InlineCode>aus...</InlineCode> ID
-          for both.
+          <strong>Same auth server for both?</strong> In many setups, the JAG Target Audience and
+          the Resource Token Endpoint point to the same Custom Authorization Server. Use the same{' '}
+          <InlineCode>aus...</InlineCode> ID for both fields.
         </Tip>
       </Section>
 
@@ -377,20 +437,42 @@ export default function SetupGuide() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div>
             <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: '0.25rem' }}>
-              400 invalid_grant on Step 2
+              Agent stuck in STAGED status
             </strong>
             <p style={{ margin: 0 }}>
-              Federation Broker Mode is not enabled on the OIDC app, or the Managed Connection between the
-              Workload Principal and the Custom Auth Server is not configured.
+              The AI agent requires at least one owner and one credential to activate. Go to the
+              agent&apos;s detail page, confirm an owner is assigned, and verify at least one key
+              appears under the <strong>Credentials</strong> tab.
             </p>
           </div>
           <div>
             <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: '0.25rem' }}>
-              400 invalid_client on Step 2 or 3
+              400 invalid_grant on token exchange
             </strong>
             <p style={{ margin: 0 }}>
-              The <InlineCode>client_assertion</InlineCode> JWT is not valid. Check that the Agent Private Key JWK is
-              the complete private key (not just the public key), and that the Key ID matches.
+              Federation Broker Mode is not enabled on the OIDC app, or the Managed Connection
+              between the AI agent and the Custom Authorization Server is not configured. Verify
+              both in Steps 1 and 3.
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: '0.25rem' }}>
+              400 invalid_client on token exchange
+            </strong>
+            <p style={{ margin: 0 }}>
+              The <InlineCode>client_assertion</InlineCode> JWT is not valid. Check that the Agent
+              Private Key JWK is the complete private key (not just the public key), and that the
+              Key ID matches the <InlineCode>kid</InlineCode> value in the Credentials tab.
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: '0.25rem' }}>
+              Agent acting on behalf of user fails (linked application)
+            </strong>
+            <p style={{ margin: 0 }}>
+              If the AI agent is linked to an OIDC app, the user must be signed in to that app
+              before the agent can act on their behalf. Ensure the user has an active session in
+              the linked application from Step 1.
             </p>
           </div>
           <div>
@@ -398,8 +480,8 @@ export default function SetupGuide() {
               Redirect URI mismatch
             </strong>
             <p style={{ margin: 0 }}>
-              The Redirect URI here must exactly match what is configured in the OIDC app in Okta &mdash;
-              including the protocol, host, port, and path. No trailing slash difference.
+              The Redirect URI here must exactly match what is configured in the OIDC app in Okta
+              &mdash; including the protocol, host, port, and path. No trailing slash difference.
             </p>
           </div>
           <div>
@@ -407,8 +489,9 @@ export default function SetupGuide() {
               State mismatch / CSRF error
             </strong>
             <p style={{ margin: 0 }}>
-              The session cookie expired or was cleared between login and callback. Try running the flow again.
-              If using Safari, ensure third-party cookies are not blocking the session cookie.
+              The session cookie expired or was cleared between login and callback. Try running the
+              flow again. If using Safari, ensure third-party cookies are not blocking the session
+              cookie.
             </p>
           </div>
         </div>
