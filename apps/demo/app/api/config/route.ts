@@ -13,14 +13,15 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ config: null });
   }
 
-  // Mask sensitive fields — show enough to confirm they're set, not the full value
+  // Mask only the client secret — show enough to confirm it's set
+  // Do NOT mask the JWK — it must be valid JSON if re-saved, and the user
+  // needs to verify key details. This endpoint is same-origin + HttpOnly cookie only.
   const masked: DemoConfig = {
     ...saved,
     clientSecret: saved.clientSecret ? '\u2022'.repeat(8) : '',
-    agentPrivateKeyJwk: saved.agentPrivateKeyJwk ? '{"alg":"RS256",...} (saved)' : '',
   };
 
-  return NextResponse.json({ config: masked, hasRealValues: true });
+  return NextResponse.json({ config: masked });
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -33,6 +34,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         { error: 'Missing required fields: clientId, oktaIssuer, agentClientId' },
         { status: 400 },
       );
+    }
+
+    // If the client secret is a masked placeholder (dots), preserve the existing value
+    const MASK = '\u2022'.repeat(8);
+    if (body.clientSecret === MASK || body.clientSecret === '••••••••') {
+      const existingRaw = req.cookies.get(CONFIG_COOKIE_NAME)?.value;
+      if (existingRaw) {
+        const existing = decrypt(existingRaw) as DemoConfig | null;
+        if (existing?.clientSecret) {
+          body.clientSecret = existing.clientSecret;
+        }
+      }
     }
 
     // Encrypt the config into a cookie
