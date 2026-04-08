@@ -68,6 +68,53 @@ function extract() {
     vals.resourceTokenEndpoint = 'https://' + h + '/oauth2/' + sid + '/v1/token';
   }
 
+  // AI Agents page — extract agent client ID
+  if (p.match(/\/admin\/directory/) || p.match(/\/admin\/ai-agent/)) {
+    // Look for agent client ID pattern in page text
+    if (!vals.agentClientId) {
+      var agentIdMatch = document.body.innerText.match(/\b(agent_[a-zA-Z0-9]+|wlp_[a-zA-Z0-9]+)\b/);
+      if (agentIdMatch) vals.agentClientId = agentIdMatch[1];
+    }
+  }
+
+  // Global: scan for private JWK JSON anywhere on the page (modal dialogs, code blocks)
+  // A private RSA JWK contains "d": (the private exponent) and "kty":"RSA"
+  var allText = document.body.innerText;
+
+  // Find private key JWK — look for JSON containing "d": and "kty"
+  if (!vals.agentPrivateKeyJwk) {
+    // Try to find JSON blocks that look like JWKs in pre/code elements and textareas first
+    var codeEls = document.querySelectorAll('pre, code, textarea, [class*="json"], [class*="key"], [role="dialog"] *');
+    for (var ci = 0; ci < codeEls.length; ci++) {
+      var codeText = (codeEls[ci].value || codeEls[ci].textContent || '').trim();
+      if (codeText.indexOf('"d"') !== -1 && codeText.indexOf('"kty"') !== -1) {
+        // Try to extract the JSON object
+        var jwkStart = codeText.indexOf('{');
+        var jwkEnd = codeText.lastIndexOf('}');
+        if (jwkStart !== -1 && jwkEnd > jwkStart) {
+          var candidate = codeText.substring(jwkStart, jwkEnd + 1);
+          try {
+            var parsed = JSON.parse(candidate);
+            if (parsed.d && parsed.kty) {
+              vals.agentPrivateKeyJwk = candidate;
+              // Also grab the kid if present
+              if (parsed.kid && !vals.agentKeyId) {
+                vals.agentKeyId = parsed.kid;
+              }
+              break;
+            }
+          } catch (e) { /* not valid JSON, skip */ }
+        }
+      }
+    }
+  }
+
+  // Find kid value — look for "kid": pattern in visible text
+  if (!vals.agentKeyId) {
+    var kidMatch = allText.match(/"kid"\s*:\s*"([a-zA-Z0-9_-]{10,})"/);
+    if (kidMatch) vals.agentKeyId = kidMatch[1];
+  }
+
   return vals;
 }
 
