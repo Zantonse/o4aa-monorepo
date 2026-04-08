@@ -34,7 +34,10 @@ export async function GET(_req: NextRequest): Promise<NextResponse> {
       code_challenge_method: pkce.method,
     });
 
-    const authorizeUrl = `${config.oktaIssuer}/v1/authorize?${params.toString()}`;
+    // The org authorization server's authorize endpoint is at /oauth2/v1/authorize
+    // oktaIssuer may be "https://domain.okta.com" or "https://domain.okta.com/oauth2"
+    const issuerBase = config.oktaIssuer.replace(/\/oauth2\/?$/, '');
+    const authorizeUrl = `${issuerBase}/oauth2/v1/authorize?${params.toString()}`;
 
     // 4. Redirect to Okta with the session cookie set
     const response = NextResponse.redirect(authorizeUrl, { status: 302 });

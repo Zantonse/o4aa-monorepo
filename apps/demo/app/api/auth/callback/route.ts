@@ -161,6 +161,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // ════════════════════════════════════════════════════════════════
   // STEP 1 — Exchange authorisation code for ID token
   // ════════════════════════════════════════════════════════════════
+  // Normalize issuer: ensure /oauth2 is in the path for the org auth server
+  const orgIssuerBase = config.oktaIssuer.replace(/\/oauth2\/?$/, '');
+  const orgTokenEndpoint = `${orgIssuerBase}/oauth2/v1/token`;
+
   const step1Params: Record<string, string> = {
     grant_type:    'authorization_code',
     code,
@@ -173,7 +177,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   let idToken: string;
 
   try {
-    const step1Endpoint = `${config.oktaIssuer}/v1/token`;
+    const step1Endpoint = orgTokenEndpoint;
     const { data, durationMs, rawRequest, rawResponse, statusCode } = await postForm(step1Endpoint, step1Params);
 
     idToken = data.id_token as string;
@@ -193,7 +197,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const e = err as Error & { rawRequest?: string; rawResponse?: string; statusCode?: number };
     steps.push({
       label:       'Step 1 — Auth code → ID token',
-      endpoint:    `${config.oktaIssuer}/v1/token`,
+      endpoint:    orgTokenEndpoint,
       params:      sanitiseParams(step1Params),
       error:       getHumanFriendlyError(err),
       rawRequest:  e.rawRequest,
