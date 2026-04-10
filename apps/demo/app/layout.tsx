@@ -33,6 +33,12 @@ export default function RootLayout({
             </Link>
             <div className="flex items-center gap-4">
               <Link
+                href="/demo-flow"
+                style={{ color: '#93c5fd', fontSize: '0.8125rem', textDecoration: 'none' }}
+              >
+                Demo Flow
+              </Link>
+              <Link
                 href="/settings"
                 style={{ color: '#93c5fd', fontSize: '0.8125rem', textDecoration: 'none' }}
               >
